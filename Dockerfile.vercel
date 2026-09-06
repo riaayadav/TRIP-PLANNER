@@ -1,0 +1,25 @@
+FROM maven:3.9.11-eclipse-temurin-17 AS build
+WORKDIR /build
+COPY pom.xml .
+RUN mvn -B dependency:go-offline
+COPY src ./src
+RUN mvn -B verify
+
+FROM tomcat:10.1.59-jre17-temurin
+COPY deploy/aiven-ca.pem /opt/roam/aiven-ca.pem
+RUN keytool -importcert -noprompt -alias roam-aiven-ca -file /opt/roam/aiven-ca.pem -cacerts -storepass changeit
+RUN groupadd --system roam && useradd --system --gid roam roam
+COPY --from=build /build/target/trip-planner.war /opt/roam/ROOT.war
+COPY deploy/vercel-server.xml /opt/roam/server.xml
+COPY deploy/vercel-entrypoint.sh /opt/roam/entrypoint.sh
+RUN chmod 755 /opt/roam/entrypoint.sh
+ENV CATALINA_BASE=/tmp/roam-tomcat \
+    CATALINA_TMPDIR=/tmp/roam-tomcat/temp \
+    APP_HTTPS=true \
+    DB_INITIALIZE=false \
+    DB_POOL_SIZE=5 \
+    PORT=8080 \
+    JAVA_OPTS="-Xms64m -Xmx384m -Djava.awt.headless=true"
+USER roam
+EXPOSE 8080
+ENTRYPOINT ["/opt/roam/entrypoint.sh"]
