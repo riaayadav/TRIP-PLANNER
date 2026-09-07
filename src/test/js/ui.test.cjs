@@ -3,6 +3,18 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
+test('memory dates default inside the trip and adjust when the selected trip changes', () => {
+  const v=view();
+  v.run("state.data={trips:[{id:1,status:'COMPLETED',start_date:'2025-01-01',end_date:'2025-01-03'},{id:2,status:'COMPLETED',start_date:'2025-06-01',end_date:'2025-06-05'}]};var form={elements:{trip_id:{value:'1'},memory_date:{value:'2026-09-07'}}};syncMemoryDate(form)");
+  assert.equal(v.run('form.elements.memory_date.value'),'2025-01-03');
+  assert.equal(v.run('form.elements.memory_date.min'),'2025-01-01');
+  assert.equal(v.run('form.elements.memory_date.max'),'2025-01-03');
+  v.run("form.elements.memory_date.value='2025-01-02';syncMemoryDate(form)");
+  assert.equal(v.run('form.elements.memory_date.value'),'2025-01-02');
+  v.run("form.elements.trip_id.value='2';syncMemoryDate(form)");
+  assert.equal(v.run('form.elements.memory_date.value'),'2025-06-05');
+  assert.equal(v.run('form.elements.memory_date.min'),'2025-06-01');
+});
 function view(fetch) {
   const nodes = new Map();
   const node = id => { if (!nodes.has(id)) nodes.set(id, {innerHTML:'',open:false,addEventListener(){},close(){this.open=false;},showModal(){this.open=true;}}); return nodes.get(id); };

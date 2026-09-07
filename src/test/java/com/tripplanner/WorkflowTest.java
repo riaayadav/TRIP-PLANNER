@@ -10,6 +10,20 @@ import java.util.*;
 import java.sql.*;
 
 class WorkflowTest {
+    @Test void emptyCatalogListsAreRejectedAndLegacyTripsStillGenerate()throws Exception{
+        assertThrows(IllegalArgumentException.class,()->TripService.listText(Map.of("attractions",", , ,"),"attractions",1000));
+        assertEquals("Park, Museum",TripService.listText(Map.of("attractions",", Park, ,Museum,"),"attractions",1000));
+        Client client=new Client();client.register("legacy-attractions@test.invalid");long destination;
+        try(Connection c=DriverManager.getConnection(System.getProperty("DB_URL"),System.getProperty("DB_USER"),System.getProperty("DB_PASSWORD"))){
+            destination=Database.insert(c,"INSERT INTO destinations(name,region,description,season,category,daily_cost,duration,activities,attractions,image) VALUES (?,?,?,?,?,?,?,?,?,?)","Legacy place","Region","Description","Summer","Nature",100,1,"Walking",",,,","mountains.jpg");
+        }
+        try {
+            var body=trip();body.put("destination_id",destination);long id=client.post("trip",body,200).path("id").asLong();
+            assertEquals("Legacy place",client.get("trip?id="+id,200).path("itinerary").get(0).path("title").asText());
+        } finally {
+            try(Connection c=DriverManager.getConnection(System.getProperty("DB_URL"),System.getProperty("DB_USER"),System.getProperty("DB_PASSWORD"))){Database.execute(c,"UPDATE destinations SET active=FALSE WHERE id=?",destination);}
+        }
+    }
     @Test void concurrentWishlistSavesAreIdempotent()throws Exception{
         Client c=new Client();c.register("parallel-wishlist@test.invalid");
         var request=HttpRequest.newBuilder(URI.create(base+"/api/wishlist")).header("Content-Type","application/json").header("X-CSRF-Token",c.csrf).POST(HttpRequest.BodyPublishers.ofString("{\"destination_id\":1,\"saved\":true}")).build();

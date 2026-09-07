@@ -4,6 +4,9 @@ A Java MVC travel-planning application implementing the 15-menu client blueprint
 
 ## Start locally
 
+On this Windows computer, double-click `start-local.cmd`. It prompts privately for an initial administrator email/password, then serves http://127.0.0.1:8080. Leave the email blank if you only want client access. Existing administrator passwords are never reset by startup. Maven and its dependency cache are available in the local `tools` folder; a source-only checkout requires Maven 3.9+ installed separately. Stop with Ctrl+C. Saved preview data is outside the build directory in `.local-data` and survives `mvn clean`.
+
+
 Install JDK 17 or newer and Maven 3.9+. From this folder:
 
 ```sh
@@ -11,7 +14,7 @@ mvn verify
 mvn test-compile exec:java -Dexec.mainClass=com.tripplanner.DevServer -Dexec.classpathScope=test
 ```
 
-Open http://127.0.0.1:8080. Register an account. This local-only preview uses a persistent H2 database at `target/dev-db`, separate from MySQL. H2 and embedded Tomcat are test dependencies and are excluded from the production WAR. Stop with Ctrl+C.
+Open http://127.0.0.1:8080. Register an account. This local-only preview uses a persistent H2 database at `.local-data/dev-db`, separate from MySQL. H2 and embedded Tomcat are test dependencies and are excluded from the production WAR. Stop with Ctrl+C.
 
 To create an administrator in the preview, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the environment before starting. There are **no built-in production credentials**. The first administrator is provisioned only when none exists. Use a unique password of at least 12 characters. Environment bootstrap values do not reset an existing administrator’s password.
 
@@ -52,4 +55,8 @@ The suite creates test accounts and records. Never point it at production. Use a
 ## Free hosted MySQL and Vercel
 
 See [the setup guide](docs/FREE-MYSQL-VERCEL.md) for Aiven Free, database initialization, Vercel container deployment and the 12-user capacity checks. A purchased domain is not required.
+
+
+
+Latest local audit: [Local verification](docs/LOCAL-VERIFICATION.md), including the 16-scenario suites, UI regressions and launcher instructions.
 
