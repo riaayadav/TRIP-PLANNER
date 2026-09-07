@@ -51,6 +51,8 @@ public final class ApiController extends HttpServlet {
             long uid=((Number)user.get("id")).longValue();
             if(path.startsWith("/admin")&&!user.get("role").equals("ADMIN")){error(res,403,"Administrator access is required.");return;}
             if(req.getMethod().equals("GET")){
+                if(path.equals("/packages")){write(res,PackageService.overview(c,uid,false));return;}
+                if(path.equals("/admin/packages")){write(res,PackageService.overview(c,uid,true));return;}
                 if(path.equals("/data")){write(res,data(c,uid));return;}
                 if(path.equals("/trip")){
                     long id=parseId(req.getParameter("id"));Map<String,Object> t=owned(c,uid,id);
@@ -75,6 +77,14 @@ public final class ApiController extends HttpServlet {
                 query(c,"SELECT id FROM users WHERE id=? FOR UPDATE",uid);
                 Map<String,Object> out=new LinkedHashMap<>();out.put("ok",true);
                 switch(path){
+                    case "/admin/package" -> out.put("id",PackageService.save(c,uid,b));
+                    case "/admin/hotel" -> out.put("id",PackageService.supplier(c,uid,b,true));
+                    case "/admin/transport" -> out.put("id",PackageService.supplier(c,uid,b,false));
+                    case "/admin/payment" -> out.put("id",PackageService.payment(c,uid,b));
+                    case "/admin/booking-status" -> PackageService.status(c,uid,b,true);
+                    case "/booking" -> {if(!user.get("role").equals("CLIENT"))throw new IllegalArgumentException("Use a traveler account to request a package.");out.put("id",PackageService.book(c,uid,b));}
+                    case "/booking-status" -> PackageService.status(c,uid,b,false);
+                    case "/booking-demo-payment" -> out.put("id",PackageService.demoPayment(c,uid,b));
                     case "/trip" -> out.put("id",saveTrip(c,uid,b));
                     case "/trip-status" -> {long id=number(b,"id",1,Long.MAX_VALUE);Map<String,Object> t=owned(c,uid,id);editable(t);String status=choice(b,"status","CANCELLED","COMPLETED");if(status.equals("COMPLETED")&&LocalDate.parse(t.get("end_date").toString()).isAfter(LocalDate.now()))throw new IllegalArgumentException("A trip can be completed on or after its end date.");execute(c,"UPDATE trips SET status=? WHERE id=?",status,id);}
                     case "/expenses","/itinerary","/packing" -> child(c,uid,path.substring(1),b);

@@ -63,3 +63,8 @@ See [the setup guide](docs/FREE-MYSQL-VERCEL.md) for Aiven Free, database initia
 
 Latest local audit: [Local verification](docs/LOCAL-VERIFICATION.md), including the 16-scenario suites, UI regressions and launcher instructions.
 
+
+
+## Package management and demo payments
+
+Administrators now use a separate operations dashboard. Manage packages, hotels, transportation, booking requests and simulated payment histories. Clients can browse published packages and review their own bookings. See [Packages guide](docs/PACKAGES.md). Existing databases migrate to schema version 3 with initialization enabled.

@@ -37,7 +37,7 @@ public final class Database implements AutoCloseable {
     public void initialize() throws Exception {
         try(Connection c=connection()) {
             if("false".equals(env("DB_INITIALIZE","true"))) {
-                if(query(c,"SELECT version FROM schema_version WHERE version=2").isEmpty())throw new SQLException("Schema version 2 is required; run the controlled migration before deployment");
+                if(query(c,"SELECT version FROM schema_version WHERE version=3").isEmpty())throw new SQLException("Schema version 3 is required; run the controlled migration before deployment");
                 return;
             }
             execute(c,"CREATE TABLE IF NOT EXISTS schema_version (version INT PRIMARY KEY)");
@@ -64,6 +64,11 @@ public final class Database implements AutoCloseable {
                 }
                 if(!indexed)execute(c,"CREATE INDEX idx_web_sessions_expiry ON web_sessions(expires_at)");
                 execute(c,"INSERT INTO schema_version(version) VALUES (2)");
+            }
+            if(query(c,"SELECT version FROM schema_version WHERE version=3").isEmpty()){
+                String schema=new String(Objects.requireNonNull(getClass().getResourceAsStream("/packages.sql")).readAllBytes(),StandardCharsets.UTF_8);
+                for(String part:schema.split(";"))if(!part.isBlank())execute(c,part);
+                execute(c,"INSERT INTO schema_version(version) VALUES (3)");
             }
             if(query(c,"SELECT id FROM destinations LIMIT 1").isEmpty()) seed(c);
             if(query(c,"SELECT setting_key FROM settings LIMIT 1").isEmpty()) {

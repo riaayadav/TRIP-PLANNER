@@ -2,6 +2,21 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+test('landing entry leads to the existing login and protects dashboard routes', async () => {
+  const v=view();await v.run('render()');
+  assert.match(v.node('#app').innerHTML,/Less figuring/);
+  assert.match(v.node('#app').innerHTML,/href="#login"/);
+  v.run("state.authMode='register';location.hash='#login'");await v.run('render()');
+  assert.match(v.node('#app').innerHTML,/Welcome back\./);
+  assert.match(v.node('#app').innerHTML,/class="auth-layout"/);
+  v.run("location.hash='#budget/1'");await v.run('render()');
+  assert.match(v.node('#app').innerHTML,/data-form="login"/);
+});
+test('signed-in visitors can see the public overview without private records', async () => {
+  const v=view();v.run("location.hash='#welcome';state.user={name:'Private name',role:'CLIENT'}");await v.run('render()');
+  assert.match(v.node('#app').innerHTML,/Open dashboard/);
+  assert.doesNotMatch(v.node('#app').innerHTML,/Private name/);
+});
 const path = require('node:path');
 test('memory dates default inside the trip and adjust when the selected trip changes', () => {
   const v=view();
@@ -20,6 +35,7 @@ function view(fetch) {
   const node = id => { if (!nodes.has(id)) nodes.set(id, {innerHTML:'',open:false,addEventListener(){},close(){this.open=false;},showModal(){this.open=true;}}); return nodes.get(id); };
   const context = vm.createContext({console,Intl,URLSearchParams,Date,Set,Map,fetch,clearInterval(){},clearTimeout(){},setTimeout(){},location:{hash:'#home'},window:{addEventListener(){}},document:{querySelector:node,addEventListener(){}}});
   const source = fs.readFileSync(path.join(__dirname,'../../main/webapp/assets/app.js'),'utf8').replace(/start\(\);\s*$/, '');
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'../../main/webapp/assets/packages.js'),'utf8'),context);
   vm.runInContext(source,context);
   return {run:code=>vm.runInContext(code,context),node};
 }
@@ -44,3 +60,14 @@ test('expired sessions obtain a fresh CSRF token and close private dialogs', asy
   assert.deepEqual(requests.map(x=>x.url),['api/data','api/session']);
 });
 
+test('administrator shell contains operations tools instead of traveler navigation', () => {
+  const v=view();v.run("state.user={role:'ADMIN',name:'Operator'};location.hash='#operations';shell('<h1>Operations</h1>')");
+  const html=v.node('#app').innerHTML;
+  assert.match(html,/Bookings &amp; payments|Bookings & payments/);
+  assert.match(html,/admin-hotels/);assert.match(html,/admin-transport/);
+  assert.doesNotMatch(html,/href="#packing"/);assert.doesNotMatch(html,/href="#wishlist"/);
+});
+test('administrator login route redirects to the operations workspace', async () => {
+  const v=view();v.run("state.user={role:'ADMIN',name:'Operator'};location.hash='#home'");await v.run('render()');
+  assert.equal(v.run('location.hash'),'operations');
+});
