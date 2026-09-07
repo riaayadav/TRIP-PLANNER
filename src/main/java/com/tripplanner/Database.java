@@ -70,6 +70,8 @@ public final class Database implements AutoCloseable {
                 for(String part:schema.split(";"))if(!part.isBlank())execute(c,part);
                 execute(c,"INSERT INTO schema_version(version) VALUES (3)");
             }
+            execute(c,"CREATE TABLE IF NOT EXISTS package_photos (package_id BIGINT PRIMARY KEY, photo MEDIUMBLOB NOT NULL, FOREIGN KEY(package_id) REFERENCES travel_packages(id) ON DELETE CASCADE)");
+
             if(query(c,"SELECT id FROM destinations LIMIT 1").isEmpty()) seed(c);
             if(query(c,"SELECT setting_key FROM settings LIMIT 1").isEmpty()) {
                 execute(c,"INSERT INTO settings VALUES (?,?)","announcement","Your next chapter starts somewhere new.");

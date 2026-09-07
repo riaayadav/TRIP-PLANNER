@@ -45,19 +45,100 @@ public final class PackageService {
         else{a.add(id);execute(c,"UPDATE "+table+" SET "+fields.replace(",","=?,")+"=? WHERE id=?",a.toArray());}
         audit(c,uid,"Saved "+table,id);return id;
     }
-    public static long save(Connection c,long uid,Map<String,Object>b)throws SQLException{
+    public static long save(Connection c,long uid,Map<String,Object>b)throws Exception{
         long id=b.containsKey("id")?number(b,"id",1,Long.MAX_VALUE):0;
-        if(id>0){var old=row(c,"travel_packages",id);if(Boolean.TRUE.equals(old.get("deleted")))throw new Missing();if(number(b,"version",1,Integer.MAX_VALUE)!=((Number)old.get("version")).longValue())throw new IllegalArgumentException("This package changed. Reload before saving.");}
+        Map<String,Object> old=null;
+        if(id>0){
+            old=row(c,"travel_packages",id);
+            if(Boolean.TRUE.equals(old.get("deleted")))throw new Missing();
+            if(number(b,"version",1,Integer.MAX_VALUE)!=((Number)old.get("version")).longValue())throw new IllegalArgumentException("This package changed. Reload before saving.");
+        }
         String action=Objects.toString(b.get("action"),"save");
-        if(action.equals("delete")){if(id==0)throw new Missing();execute(c,"UPDATE travel_packages SET active=FALSE,deleted=TRUE,version=version+1 WHERE id=?",id);audit(c,uid,"Deleted package from catalog",id);return id;}
+        if(action.equals("delete")){
+            if(id==0)throw new Missing();
+            execute(c,"UPDATE travel_packages SET active=FALSE,deleted=TRUE,version=version+1 WHERE id=?",id);
+            audit(c,uid,"Deleted package from catalog",id);
+            return id;
+        }
         if(!action.equals("save"))throw new IllegalArgumentException("Unknown package action.");
-        long destination=number(b,"destination_id",1,Long.MAX_VALUE),hotel=number(b,"hotel_id",1,Long.MAX_VALUE),transport=number(b,"transport_id",1,Long.MAX_VALUE);
+
+        long destination;
+        if(b.containsKey("destination_name") && !Objects.toString(b.get("destination_name"),"").trim().isBlank()){
+            String dName=text(b,"destination_name",120).trim();
+            var found=query(c,"SELECT id,active FROM destinations WHERE LOWER(TRIM(name))=LOWER(TRIM(?))",dName);
+            if(!found.isEmpty()){
+                destination=((Number)found.get(0).get("id")).longValue();
+                if(!Boolean.TRUE.equals(found.get(0).get("active")))execute(c,"UPDATE destinations SET active=TRUE WHERE id=?",destination);
+            }else{
+                destination=insert(c,"INSERT INTO destinations(name,region,description,season,category,daily_cost,duration,activities,attractions,image,active) VALUES (?,?,?,?,?,?,?,?,?,?,TRUE)",dName,dName+" (Custom)","Explore "+dName+", curated by our team.","All seasons","Adventure",new BigDecimal("3500.00"),number(b,"duration",1,60),"Sightseeing, Local Culture, Exploration",dName+" Highlights","city.jpg");
+            }
+        }else{
+            destination=number(b,"destination_id",1,Long.MAX_VALUE);
+        }
+
+        long hotel;
+        if(b.containsKey("hotel_name") && !Objects.toString(b.get("hotel_name"),"").trim().isBlank()){
+            String hName=text(b,"hotel_name",120).trim();
+            var found=query(c,"SELECT id,active FROM hotels WHERE LOWER(TRIM(name))=LOWER(TRIM(?))",hName);
+            if(!found.isEmpty()){
+                hotel=((Number)found.get(0).get("id")).longValue();
+                if(!Boolean.TRUE.equals(found.get(0).get("active")))execute(c,"UPDATE hotels SET active=TRUE WHERE id=?",hotel);
+            }else{
+                String loc=(b.containsKey("destination_name")&&!Objects.toString(b.get("destination_name"),"").isBlank())?text(b,"destination_name",120).trim()+" Central":"Central Location";
+                hotel=insert(c,"INSERT INTO hotels(name,location,description,amenities,active) VALUES (?,?,?,?,TRUE)",hName,loc,"Comfortable stay at "+hName+" with quality service and modern amenities.","Wi-Fi, Breakfast, Room Service, Air Conditioning");
+            }
+        }else{
+            hotel=number(b,"hotel_id",1,Long.MAX_VALUE);
+        }
+
+        long transport;
+        if(b.containsKey("transport_name") && !Objects.toString(b.get("transport_name"),"").trim().isBlank()){
+            String tName=text(b,"transport_name",120).trim();
+            var found=query(c,"SELECT id,active FROM transport_options WHERE LOWER(TRIM(name))=LOWER(TRIM(?))",tName);
+            if(!found.isEmpty()){
+                transport=((Number)found.get(0).get("id")).longValue();
+                if(!Boolean.TRUE.equals(found.get(0).get("active")))execute(c,"UPDATE transport_options SET active=TRUE WHERE id=?",transport);
+            }else{
+                String lower=tName.toLowerCase(Locale.ROOT);
+                String mode=lower.contains("flight")?"Flight":lower.contains("train")?"Train":lower.contains("bus")?"Bus":(lower.contains("car")||lower.contains("cab")||lower.contains("taxi"))?"Car":lower.contains("ferry")?"Ferry":"Mixed";
+                transport=insert(c,"INSERT INTO transport_options(name,mode,route_details,description,active) VALUES (?,?,?,?,TRUE)",tName,mode,"Round trip transfers included","Convenient transportation via "+tName+".");
+            }
+        }else{
+            transport=number(b,"transport_id",1,Long.MAX_VALUE);
+        }
+
         boolean active=Boolean.TRUE.equals(b.get("active"));
-        for(var ref:List.of(Map.entry("destinations",destination),Map.entry("hotels",hotel),Map.entry("transport_options",transport))){var linked=row(c,ref.getKey(),ref.getValue());if(active&&!Boolean.TRUE.equals(linked.get("active")))throw new IllegalArgumentException("Published packages require an active destination, hotel and transport option.");}
+        for(var ref:List.of(Map.entry("destinations",destination),Map.entry("hotels",hotel),Map.entry("transport_options",transport))){
+            var linked=row(c,ref.getKey(),ref.getValue());
+            if(active&&!Boolean.TRUE.equals(linked.get("active")))throw new IllegalArgumentException("Published packages require an active destination, hotel and transport option.");
+        }
         BigDecimal price=money(b,"price");if(price.signum()<=0)throw new IllegalArgumentException("Package price must be greater than zero.");
-        Object[] values={destination,hotel,transport,text(b,"name",150),text(b,"description",4000),text(b,"inclusions",4000),optional(b,"exclusions",2000),text(b,"itinerary",4000),text(b,"terms",2000),price,number(b,"duration",1,60),number(b,"max_people",1,50),choice(b,"image","mountains.jpg","coast.jpg","city.jpg"),active};
+
+        String image="mountains.jpg";
+        if(b.containsKey("image")&&!Objects.toString(b.get("image"),"").trim().isBlank()){
+            String candidate=Objects.toString(b.get("image"),"").trim();
+            if(candidate.matches("api/package-photo\\?id=\\d+")||Set.of("mountains.jpg","coast.jpg","city.jpg").contains(candidate)){
+                image=candidate;
+            }
+        }else if(old!=null&&old.get("image")!=null){
+            image=old.get("image").toString();
+        }
+
+        byte[] photoBytes=null;
+        if(b.containsKey("photo")&&!Objects.toString(b.get("photo"),"").trim().isBlank()){
+            photoBytes=ApiController.photo(b);
+        }
+
+        Object[] values={destination,hotel,transport,text(b,"name",150),text(b,"description",4000),text(b,"inclusions",4000),optional(b,"exclusions",2000),text(b,"itinerary",4000),text(b,"terms",2000),price,number(b,"duration",1,60),number(b,"max_people",1,50),image,active};
         if(id==0)id=insert(c,"INSERT INTO travel_packages(destination_id,hotel_id,transport_id,name,description,inclusions,exclusions,itinerary,terms,price,duration,max_people,image,active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",values);
         else{var a=new ArrayList<>(Arrays.asList(values));a.add(id);execute(c,"UPDATE travel_packages SET destination_id=?,hotel_id=?,transport_id=?,name=?,description=?,inclusions=?,exclusions=?,itinerary=?,terms=?,price=?,duration=?,max_people=?,image=?,active=?,version=version+1 WHERE id=?",a.toArray());}
+
+        if(photoBytes!=null){
+            execute(c,"DELETE FROM package_photos WHERE package_id=?",id);
+            execute(c,"INSERT INTO package_photos(package_id,photo) VALUES (?,?)",id,photoBytes);
+            execute(c,"UPDATE travel_packages SET image=? WHERE id=?","api/package-photo?id="+id,id);
+        }
+
         audit(c,uid,"Saved package",id);return id;
     }
     public static long book(Connection c,long uid,Map<String,Object>b)throws Exception{

@@ -34,6 +34,13 @@ public final class ApiController extends HttpServlet {
                 if(!rows.isEmpty()&&Objects.equals(rows.get(0).get("auth_version"),session.getAttribute("version")))user=rows.get(0);
                 else {session.invalidate();error(res,401,"Please sign in again.");return;}
             }
+            if(path.equals("/package-photo")&&req.getMethod().equals("GET")){
+                long id=parseId(req.getParameter("id"));
+                List<Map<String,Object>> rows=query(c,"SELECT photo FROM package_photos WHERE package_id=?",id);
+                if(rows.isEmpty()||rows.get(0).get("photo")==null)throw new Missing();
+                Object raw=rows.get(0).get("photo");byte[] photo=raw instanceof Blob blob?blob.getBytes(1,(int)blob.length()):(byte[])raw;
+                res.setCharacterEncoding(null);res.setContentType("image/jpeg");res.setHeader("Cache-Control","public, max-age=86400");res.setContentLength(photo.length);res.getOutputStream().write(photo);return;
+            }
             if(path.equals("/session")&&req.getMethod().equals("GET")){
                 Map<String,Object> out=new LinkedHashMap<>();out.put("csrf",session.getAttribute("csrf"));out.put("user",user);out.put("settings",settings(c));write(res,out);return;
             }
@@ -157,11 +164,11 @@ public final class ApiController extends HttpServlet {
     private static String email(Map<String,Object>b){String s=text(b,"email",254).toLowerCase(Locale.ROOT);if(!s.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"))throw new IllegalArgumentException("Enter a valid email address.");return s;}
     private static long parseId(String s){try{long id=Long.parseLong(s);if(id<1)throw new NumberFormatException();return id;}catch(Exception e){throw new IllegalArgumentException("Invalid identifier.");}}
     private static void audit(Connection c,long user,String action,long target)throws SQLException{execute(c,"INSERT INTO audit_log(actor_id,action,target_id) VALUES (?,?,?)",user,action,target);}
-    private static byte[] photo(Map<String,Object>b)throws IOException{
+    static byte[] photo(Map<String,Object>b)throws IOException{
         String raw=optional(b,"photo",4_100_000);if(raw.isBlank())return null;
-        if(!raw.matches("data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=\\r\\n]+"))throw new IllegalArgumentException("Upload a JPEG or PNG photograph.");
-        byte[] bytes=Base64.getDecoder().decode(raw.substring(raw.indexOf(',')+1));if(bytes.length>3_000_000)throw new IllegalArgumentException("Photos must be under 3 MB.");
-        try(var stream=ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))){var readers=ImageIO.getImageReaders(stream);if(!readers.hasNext())throw new IllegalArgumentException("That photo format cannot be read. Use JPEG or PNG.");var reader=readers.next();try{reader.setInput(stream);int w=reader.getWidth(0),h=reader.getHeight(0);if(w<1||h<1||(long)w*h>20_000_000)throw new IllegalArgumentException("Photos must contain at most 20 million pixels.");BufferedImage input=reader.read(0);double scale=Math.min(1,1600.0/Math.max(w,h));BufferedImage clean=new BufferedImage(Math.max(1,(int)(w*scale)),Math.max(1,(int)(h*scale)),BufferedImage.TYPE_INT_RGB);Graphics2D g=clean.createGraphics();try{g.setColor(java.awt.Color.WHITE);g.fillRect(0,0,clean.getWidth(),clean.getHeight());g.drawImage(input,0,0,clean.getWidth(),clean.getHeight(),null);}finally{g.dispose();}ByteArrayOutputStream out=new ByteArrayOutputStream();ImageIO.write(clean,"jpg",out);return out.toByteArray();}finally{reader.dispose();}}catch(IOException e){throw new IllegalArgumentException("That photo is damaged or incomplete. Use a valid JPEG or PNG.");}
+        if(!raw.matches("data:image/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=\\r\\n]+"))throw new IllegalArgumentException("Upload a JPEG, PNG or WebP photograph.");
+        byte[] bytes=Base64.getDecoder().decode(raw.substring(raw.indexOf(',')+1));if(bytes.length>4_000_000)throw new IllegalArgumentException("Photos must be under 4 MB.");
+        try(var stream=ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))){var readers=ImageIO.getImageReaders(stream);if(!readers.hasNext())throw new IllegalArgumentException("That photo format cannot be read. Use JPEG, PNG or WebP.");var reader=readers.next();try{reader.setInput(stream);int w=reader.getWidth(0),h=reader.getHeight(0);if(w<1||h<1||(long)w*h>20_000_000)throw new IllegalArgumentException("Photos must contain at most 20 million pixels.");BufferedImage input=reader.read(0);double scale=Math.min(1,1600.0/Math.max(w,h));BufferedImage clean=new BufferedImage(Math.max(1,(int)(w*scale)),Math.max(1,(int)(h*scale)),BufferedImage.TYPE_INT_RGB);Graphics2D g=clean.createGraphics();try{g.setColor(java.awt.Color.WHITE);g.fillRect(0,0,clean.getWidth(),clean.getHeight());g.drawImage(input,0,0,clean.getWidth(),clean.getHeight(),null);}finally{g.dispose();}ByteArrayOutputStream out=new ByteArrayOutputStream();ImageIO.write(clean,"jpg",out);return out.toByteArray();}finally{reader.dispose();}}catch(IOException e){throw new IllegalArgumentException("That photo is damaged or incomplete. Use a valid JPEG, PNG or WebP.");}
     }
     private static void write(HttpServletResponse res,Object o)throws IOException{JSON.writeValue(res.getOutputStream(),o);}
     private static void error(HttpServletResponse res,int status,String message)throws IOException{res.setStatus(status);write(res,Map.of("error",message));}

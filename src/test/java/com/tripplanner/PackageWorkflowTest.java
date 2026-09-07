@@ -49,4 +49,49 @@ class PackageWorkflowTest {
         assertEquals(0,traveler.get("packages",200).path("packages").size());assertEquals(1,traveler.get("packages",200).path("bookings").size());admin.post("admin/hotel",Map.of("id",hotel,"action","delete"),200);
     }
 
+    @Test void customPackageWithAutoProvisionedSuppliersAndPhotoUpload()throws Exception{
+        Client admin=new Client();admin.session();admin.post("login",Map.of("email","admin@test.invalid","password","Admin-test-only-1234"),200);admin.session();
+        var img=new java.awt.image.BufferedImage(8,8,java.awt.image.BufferedImage.TYPE_INT_RGB);
+        var bytes=new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(img,"png",bytes);
+        String base64Photo="data:image/png;base64,"+Base64.getEncoder().encodeToString(bytes.toByteArray());
+
+        var pkg=new LinkedHashMap<String,Object>();
+        pkg.put("destination_name","Paris");
+        pkg.put("hotel_name","Eiffel Grand Palace");
+        pkg.put("transport_name","Eurostar Express Train");
+        pkg.put("name","Parisian Dream");
+        pkg.put("description","A romantic week in Paris");
+        pkg.put("inclusions","Hotel, Eurostar, Daily breakfast");
+        pkg.put("exclusions","Personal shopping");
+        pkg.put("itinerary","Day 1: Arrival & Eiffel Tower");
+        pkg.put("terms","Subject to terms");
+        pkg.put("price","2500.00");
+        pkg.put("duration",5);
+        pkg.put("max_people",6);
+        pkg.put("photo",base64Photo);
+        pkg.put("active",true);
+
+        long pid=admin.post("admin/package",pkg,200).path("id").asLong();
+        assertTrue(pid>0);
+
+        var overview=admin.get("admin/packages",200);
+        var created=overview.path("packages").elements();
+        JsonNode found=null;
+        while(created.hasNext()){
+            var node=created.next();
+            if(node.path("id").asLong()==pid){found=node;break;}
+        }
+        assertNotNull(found);
+        assertEquals("Paris",found.path("destination").asText());
+        assertEquals("Eiffel Grand Palace",found.path("hotel").asText());
+        assertEquals("Eurostar Express Train",found.path("transport").asText());
+        assertEquals("api/package-photo?id="+pid,found.path("image").asText());
+
+        var photoResp=admin.http.send(HttpRequest.newBuilder(URI.create(base+"/api/package-photo?id="+pid)).GET().build(),HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(200,photoResp.statusCode());
+        assertEquals("image/jpeg",photoResp.headers().firstValue("content-type").orElse(""));
+        assertTrue(photoResp.body().length>0);
+    }
 }
+
