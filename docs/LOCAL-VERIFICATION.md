@@ -28,7 +28,9 @@ Deployment is deferred at the user's request. This pass focused on working clien
 | JavaScript syntax | Passed |
 | PowerShell launcher parsing | Passed |
 | Local launcher | Started Tomcat successfully on 127.0.0.1:8080 |
+| MySQL startup mode | Started against the disposable local MySQL schema with initialization disabled; HTTP health check returned ok |
 | Browser | Login, trip creation, zero-budget display/editing, packing edit dialog/save and unchanged packing count verified |
+| Seasonal page | All four keyboard-focused icons reported their intended animation names; layout and visible focus outline inspected in-browser. The loaded reduced-motion stylesheet contains an important global animation override; OS preference switching was not exercised. |
 | Mixed MySQL workload | 12 concurrent users, 108 requests, zero failures; local warm-server p95 90 ms, maximum 104 ms |
 
 The Java suite also covers client ownership, CSRF, trip status/dates, expenses, generated itinerary/packing, photo privacy, feedback uniqueness/replies, admin publication/settings/access, pagination, password revocation, shared sessions, logout and login throttling.
@@ -39,6 +41,8 @@ Run `mvn verify` for Java tests and `node --test src/test/js/ui.test.cjs` for UI
 
 Double-click `start-local.cmd` in the project folder. Choose an administrator email and password at its private prompts to enable admin access on first startup; registration creates client accounts. Existing administrators are not reset. Stop a currently running preview before starting another on port 8080.
 
-The preview uses H2 for self-contained local use; MySQL remains the production database supported by the same JDBC application and verified integration suite. Local and hosted data are separate. The local `tools` directory contains Maven and cached dependencies on this computer; it is excluded from Git and the source-only ZIP.
+The default preview uses H2 for self-contained local use. To run against MySQL, use `powershell -NoProfile -ExecutionPolicy Bypass -File .\start-local.ps1 -UseMySql` from the project folder. The launcher asks for the JDBC URL, database user and a hidden password, unless supplied through `DB_URL`, `DB_USER` and `DB_PASSWORD` environment variables. Create an empty application database first; startup initializes its tables. Set `DB_INITIALIZE=false` to use an already initialized schema without running initialization. Administrator creation requires initialization to be enabled. Never use the integration test commands against your application database.
+
+For local MySQL, a URL can be `jdbc:mysql://127.0.0.1:3306/trip_planner?connectionTimeZone=UTC`. For Aiven, follow `HOSTED-DATABASE.md` for certificate verification and the JVM truststore settings; the MySQL launcher does not automatically install a CA certificate. Database passwords are not written to project files. Local H2 and MySQL data are separate. The local `tools` directory contains Maven and cached dependencies on this computer; it is excluded from Git and the source-only ZIP.
 
 The completed checks support the specific behaviors above. They are not a guarantee that every possible input, browser, concurrency schedule or operating condition is defect-free. Deployment, external-service setup and hosted performance were intentionally outside this pass.

@@ -5,7 +5,7 @@ Source: `Trip_Planner page flow.pdf`, 18 pages. The PDF was used as product requ
 | PDF menu | Implemented route | Behavior |
 |---|---|---|
 | 01 Home / Dashboard | `#home` | Welcome, quick search, upcoming trip, actions, wishlist preview, trip and expense totals |
-| 02 Explore by season | `#season` | Summer, Monsoon, Autumn, Winter; animated hover states respecting reduced motion; filtered destination results |
+| 02 Explore by season | `#season` | Summer, Monsoon, Autumn, Winter; distinct short sun/rain/leaf/snow animations on hover or keyboard focus, respecting reduced motion; filtered destination results |
 | 03 Explore destinations | `#explore` | Search, category and season filters, cards, detail dialog, costs, activities, wishlist, compare and planning links |
 | 04 Find my perfect trip | `#perfect` | Season, type, per-person budget, duration and interests; explained weighted matching and shortlist |
 | 05 Plan my trip | `#plan` | Destination, dates, travelers, duration validation, preferences and group budget; transactional initial itinerary and packing generation |
@@ -42,3 +42,4 @@ Source: `Trip_Planner page flow.pdf`, 18 pages. The PDF was used as product requ
 - Monetary inputs are group totals except the clearly labeled per-person recommendation and destination estimates.
 - Published destinations alone appear in discovery. Historical trips retain their destination reference if the destination is hidden.
 - No travel booking, payment processing, live provider integration or email delivery is represented as working.
+

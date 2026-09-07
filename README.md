@@ -4,6 +4,9 @@ A Java MVC travel-planning application implementing the 15-menu client blueprint
 
 ## Start locally
 
+> 💡 **Step-by-step guide**: See [RUN_GUIDE.md](RUN_GUIDE.md) for full instructions, options, and troubleshooting.
+
+
 On this Windows computer, double-click `start-local.cmd`. It prompts privately for an initial administrator email/password, then serves http://127.0.0.1:8080. Leave the email blank if you only want client access. Existing administrator passwords are never reset by startup. Maven and its dependency cache are available in the local `tools` folder; a source-only checkout requires Maven 3.9+ installed separately. Stop with Ctrl+C. Saved preview data is outside the build directory in `.local-data` and survives `mvn clean`.
 
 
