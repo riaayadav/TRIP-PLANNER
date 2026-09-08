@@ -190,20 +190,25 @@ public final class TripService {
                 interests,
                 budget
             );
-            String[] sights = Arrays.stream(ds.get(0).get("attractions").toString().split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toArray(String[]::new);
-            if (sights.length == 0) sights = new String[] { ds.get(0).get("name").toString() };
-            for (int day = 1; day <= days; day++) execute(
-                connection,
-                "INSERT INTO itinerary(trip_id,day_number,time_slot,title,note) VALUES (?,?,?,?,?)",
-                id,
-                day,
-                "09:00",
-                sights[(day - 1) % sights.length].trim(),
-                "Suggested stop. Check opening hours and local conditions before travel."
-            );
+            String itineraryMode = body.containsKey("itinerary_mode")
+                ? choice(body, "itinerary_mode", "suggested", "blank")
+                : "suggested";
+            if (itineraryMode.equals("suggested")) {
+                String[] sights = Arrays.stream(ds.get(0).get("attractions").toString().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toArray(String[]::new);
+                if (sights.length == 0) sights = new String[] { ds.get(0).get("name").toString() };
+                for (int day = 1; day <= days; day++) execute(
+                    connection,
+                    "INSERT INTO itinerary(trip_id,day_number,time_slot,title,note) VALUES (?,?,?,?,?)",
+                    id,
+                    day,
+                    "09:00",
+                    sights[(day - 1) % sights.length].trim(),
+                    "Suggested stop. Check opening hours and local conditions before travel."
+                );
+            }
             String[][] packing = {
                 { "Clothes", "Comfortable clothes" },
                 { "Documents", "ID and travel reservations" },

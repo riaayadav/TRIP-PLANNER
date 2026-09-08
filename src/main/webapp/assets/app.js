@@ -338,7 +338,19 @@ function plan(t = null, selected = '') {
           ds.map((d) => [d.id, d.name]),
           t?.destination_id || selected,
           'required',
-        )}${input('start_date', 'Departure date', t?.start_date || localDate(), 'date', 'required')}${input('end_date', 'Return date', t?.end_date || localDate(), 'date', 'required')}${input('people', 'Travelers', t?.people || 1, 'number', 'min="1" max="50" required')}${input('budget', 'Total group budget (INR)', t?.budget ?? 10000, 'number', 'min="0" max="99999999.99" step="0.01" required')}${area('interests', 'Interests & preferences', t?.interests || '', 500)}<p class="note full">Trips can be up to 60 days. Your initial itinerary and seasonal packing list are editable suggestions. No reservations are made.</p>${submit(t ? 'Save changes' : 'Create my trip ↗')}</form>`)
+        )}${input('start_date', 'Departure date', t?.start_date || localDate(), 'date', 'required')}${input('end_date', 'Return date', t?.end_date || localDate(), 'date', 'required')}${input('people', 'Travelers', t?.people || 1, 'number', 'min="1" max="50" required')}${input('budget', 'Total group budget (INR)', t?.budget ?? 10000, 'number', 'min="0" max="99999999.99" step="0.01" required')}${area('interests', 'Interests & preferences', t?.interests || '', 500)}${
+          t
+            ? ''
+            : select(
+                'itinerary_mode',
+                'Build your itinerary',
+                [
+                  ['suggested', 'Start with suggested activities'],
+                  ['blank', 'Start with a blank itinerary'],
+                ],
+                'suggested',
+              )
+        }<p class="note full">Trips can be up to 60 days. Add, edit or remove itinerary activities to make the schedule your own. Your seasonal packing list is editable too. No reservations are made.</p>${submit(t ? 'Save changes' : 'Create my trip ↗')}</form>`)
   );
 }
 function tripTabs(t, active) {
@@ -710,7 +722,13 @@ function childForm(kind, item = {}) {
       input('title', 'Activity or place', item.title || '', 'text', 'required maxlength="150"') +
       area('note', 'Notes', item.note || '', 1000);
   openDialog(
-    item.id ? 'Edit item' : 'Add item',
+    kind === 'itinerary'
+      ? item.id
+        ? 'Edit activity'
+        : 'Add activity'
+      : item.id
+        ? 'Edit item'
+        : 'Add item',
     `<form data-form="${kind}" class="form-grid">${fields}${submit()}</form>`,
   );
 }

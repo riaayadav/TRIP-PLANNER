@@ -1,10 +1,10 @@
 {
   "trip-planner-source.zip": {
-    "bytes": 1070063,
-    "sha256": "bde2e63b0383aa53757a099d53523b53ea525d5df06dcbea4cd34bb99b13d00b"
+    "bytes": 1070883,
+    "sha256": "db80ed448ad76f631afcc3b0940e02df5e5dd2b8e9bda12b626fd87c21c0df74"
   },
   "trip-planner.war": {
-    "bytes": 7596012,
-    "sha256": "14ff8f1243ca9a02935be20d95e2c867194051774e586a9174a4d2fe9a804f4e"
+    "bytes": 7596238,
+    "sha256": "29fc6f5e57a8aff32e1db513dead109e2e19df8327da59884e21ab368818a82b"
   }
 }

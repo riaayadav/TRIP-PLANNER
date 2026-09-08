@@ -63,5 +63,4 @@ Latest local audit: [Local verification](docs/LOCAL-VERIFICATION.md), including 
 
 Administrators now use a separate operations dashboard. Manage packages, hotels, transportation, booking requests and simulated payment histories. Clients can browse published packages and review their own bookings. See [Packages guide](docs/PACKAGES.md). Existing databases migrate to schema version 4 with initialization enabled.
 
-
 Destination categories are entered as text (up to 40 characters). Administrators can upload JPEG or PNG covers up to 3 MB; existing covers remain unchanged when no replacement is chosen. Schema version 4 adds destination photo storage.

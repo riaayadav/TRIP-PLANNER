@@ -456,4 +456,69 @@ class PackageWorkflowTest {
             admin.post("admin/destination", body, 200);
         }
     }
+
+    @Test
+    void travelerCanBuildAndEditBlankItinerary() throws Exception {
+        Client traveler = new Client();
+        traveler.register("manual-itinerary@test.invalid");
+        var trip = WorkflowTest.trip();
+        trip.put("itinerary_mode", "blank");
+        long id = traveler.post("trip", trip, 200).path("id").asLong();
+        assertEquals(
+            0,
+            traveler
+                .get("trip?id=" + id, 200)
+                .path("itinerary")
+                .size()
+        );
+        assertEquals(
+            5,
+            traveler
+                .get("trip?id=" + id, 200)
+                .path("packing")
+                .size()
+        );
+        traveler.post(
+            "itinerary",
+            Map.of(
+                "trip_id",
+                id,
+                "day_number",
+                1,
+                "time_slot",
+                "10:30",
+                "title",
+                "My own walk",
+                "note",
+                "Start at the river"
+            ),
+            200
+        );
+        var activity = traveler
+            .get("trip?id=" + id, 200)
+            .path("itinerary")
+            .get(0);
+        traveler.post(
+            "itinerary",
+            Map.of(
+                "trip_id",
+                id,
+                "id",
+                activity.path("id").asLong(),
+                "day_number",
+                1,
+                "time_slot",
+                "14:15",
+                "title",
+                "Visit the museum",
+                "note",
+                "Bring tickets"
+            ),
+            200
+        );
+        var changed = traveler.get("trip?id=" + id, 200).path("itinerary");
+        assertEquals(1, changed.size());
+        assertEquals("Visit the museum", changed.get(0).path("title").asText());
+        assertEquals("14:15", changed.get(0).path("time_slot").asText());
+    }
 }

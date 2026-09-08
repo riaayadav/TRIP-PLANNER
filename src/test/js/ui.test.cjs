@@ -154,3 +154,12 @@ test('destination editor uses category text and photo upload while preserving an
   );
   assert.equal(v.run('destinationCategories().join(",")'), 'Wellness,Wildlife');
 });
+test('new trips offer a blank itinerary without resetting an existing trip', () => {
+  const v=view();
+  v.run("state.data={destinations:[{id:1,name:'Manali'}],trips:[]}");
+  assert.match(v.run('plan()'),/value="blank"/);
+  assert.doesNotMatch(v.run("plan({id:1,destination_id:1,title:'My trip',start_date:'2026-09-08',end_date:'2026-09-09',people:1,budget:0})"),/name="itinerary_mode"/);
+  v.run("state.trip={id:1,start_date:'2026-09-08',end_date:'2026-09-09'};childForm('itinerary',{id:2,day_number:2,time_slot:'14:15',title:'Museum',note:'Tickets'})");
+  assert.match(v.node('#modal').innerHTML,/Edit activity/);
+  assert.match(v.node('#modal').innerHTML,/value="14:15"/);
+});
