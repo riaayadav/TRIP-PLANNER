@@ -10,7 +10,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      test: ['CMD-SHELL', 'mysqladmin ping -h localhost --silent']
       interval: 10s
       timeout: 5s
       retries: 15
@@ -29,7 +29,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
       TZ: Asia/Kolkata
       JAVA_OPTS: -Xms128m -Xmx512m -Djava.awt.headless=true
-    ports: ["127.0.0.1:8080:8080"]
+    ports: ['127.0.0.1:8080:8080']
     networks: [backend]
 volumes:
   mysql_data:

@@ -24,7 +24,7 @@ $env:DB_INITIALIZE='true'
 mvn -B compile exec:java '-Dexec.mainClass=com.tripplanner.SchemaInitializer'
 ```
 
-Continue only after the command reports schema version 2 initialized. This creates tables, sample destinations and the administrator. Do not run the integration tests against this database: tests create disposable fixtures. Remove the administrator bootstrap password from your shell afterwards:
+Continue only after the command reports schema version 3 initialized. This creates tables, sample destinations and the administrator. Do not run the integration tests against this database: tests create disposable fixtures. Remove the administrator bootstrap password from your shell afterwards:
 
 ```powershell
 Remove-Item Env:ADMIN_PASSWORD
@@ -39,15 +39,15 @@ Vercel currently documents custom container images as a beta feature on all plan
 
 Follow https://vercel.com/docs/functions/container-images to link this project and build/deploy its container. Set the project root to this folder. Set these **server-side** environment variables before deployment:
 
-| Variable | Value |
-|---|---|
-| DB_URL | The verified-TLS JDBC URL above |
-| DB_USER | Restricted application database username |
-| DB_PASSWORD | That user's private password |
-| DB_INITIALIZE | `false` |
-| DB_POOL_SIZE | `5` |
-| APP_HTTPS | `true` |
-| PORT | `8080` |
+| Variable      | Value                                    |
+| ------------- | ---------------------------------------- |
+| DB_URL        | The verified-TLS JDBC URL above          |
+| DB_USER       | Restricted application database username |
+| DB_PASSWORD   | That user's private password             |
+| DB_INITIALIZE | `false`                                  |
+| DB_POOL_SIZE  | `5`                                      |
+| APP_HTTPS     | `true`                                   |
+| PORT          | `8080`                                   |
 
 No custom domain is needed: use the deployment's assigned HTTPS `vercel.app` address. Do not expose credentials as frontend variables. Isolate Preview deployments from the production database.
 

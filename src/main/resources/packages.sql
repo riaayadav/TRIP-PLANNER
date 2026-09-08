@@ -1,7 +1,77 @@
-CREATE TABLE IF NOT EXISTS hotels (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(120) NOT NULL, location VARCHAR(200) NOT NULL, description VARCHAR(2000) NOT NULL, amenities VARCHAR(2000) NOT NULL, active BOOLEAN NOT NULL DEFAULT TRUE);
-CREATE TABLE IF NOT EXISTS transport_options (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(120) NOT NULL, mode VARCHAR(30) NOT NULL, route_details VARCHAR(500) NOT NULL, description VARCHAR(2000) NOT NULL, active BOOLEAN NOT NULL DEFAULT TRUE);
-CREATE TABLE IF NOT EXISTS travel_packages (id BIGINT PRIMARY KEY AUTO_INCREMENT, destination_id BIGINT NOT NULL, hotel_id BIGINT NOT NULL, transport_id BIGINT NOT NULL, name VARCHAR(150) NOT NULL, description TEXT NOT NULL, inclusions TEXT NOT NULL, exclusions VARCHAR(2000) NOT NULL, itinerary TEXT NOT NULL, terms VARCHAR(2000) NOT NULL, price DECIMAL(12,2) NOT NULL, duration INT NOT NULL, max_people INT NOT NULL, image VARCHAR(100) NOT NULL, active BOOLEAN NOT NULL DEFAULT FALSE, deleted BOOLEAN NOT NULL DEFAULT FALSE, version INT NOT NULL DEFAULT 1, FOREIGN KEY(destination_id) REFERENCES destinations(id), FOREIGN KEY(hotel_id) REFERENCES hotels(id), FOREIGN KEY(transport_id) REFERENCES transport_options(id));
-CREATE TABLE IF NOT EXISTS package_bookings (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT NOT NULL, package_id BIGINT NOT NULL, package_name VARCHAR(150) NOT NULL, start_date DATE NOT NULL, end_date DATE NOT NULL, people INT NOT NULL, total DECIMAL(14,2) NOT NULL, snapshot MEDIUMTEXT NOT NULL, status VARCHAR(30) NOT NULL DEFAULT 'REQUESTED', request_key VARCHAR(80) NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(user_id,request_key), FOREIGN KEY(user_id) REFERENCES users(id), FOREIGN KEY(package_id) REFERENCES travel_packages(id));
-CREATE TABLE IF NOT EXISTS booking_payments (id BIGINT PRIMARY KEY AUTO_INCREMENT, booking_id BIGINT NOT NULL, actor_id BIGINT NOT NULL, kind VARCHAR(20) NOT NULL, amount DECIMAL(14,2) NOT NULL, reference VARCHAR(150) NOT NULL UNIQUE, note VARCHAR(1000) NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(booking_id) REFERENCES package_bookings(id), FOREIGN KEY(actor_id) REFERENCES users(id));
-CREATE TABLE IF NOT EXISTS package_photos (package_id BIGINT PRIMARY KEY, photo MEDIUMBLOB NOT NULL, FOREIGN KEY(package_id) REFERENCES travel_packages(id) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS hotels (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(120) NOT NULL,
+    location VARCHAR(200) NOT NULL,
+    description VARCHAR(2000) NOT NULL,
+    amenities VARCHAR(2000) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE
+);
 
+CREATE TABLE IF NOT EXISTS transport_options (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(120) NOT NULL,
+    mode VARCHAR(30) NOT NULL,
+    route_details VARCHAR(500) NOT NULL,
+    description VARCHAR(2000) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS travel_packages (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    destination_id BIGINT NOT NULL,
+    hotel_id BIGINT NOT NULL,
+    transport_id BIGINT NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT NOT NULL,
+    inclusions TEXT NOT NULL,
+    exclusions VARCHAR(2000) NOT NULL,
+    itinerary TEXT NOT NULL,
+    terms VARCHAR(2000) NOT NULL,
+    price DECIMAL(12, 2) NOT NULL,
+    duration INT NOT NULL,
+    max_people INT NOT NULL,
+    image VARCHAR(100) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    version INT NOT NULL DEFAULT 1,
+    FOREIGN KEY (destination_id) REFERENCES destinations (id),
+    FOREIGN KEY (hotel_id) REFERENCES hotels (id),
+    FOREIGN KEY (transport_id) REFERENCES transport_options (id)
+);
+
+CREATE TABLE IF NOT EXISTS package_bookings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    package_id BIGINT NOT NULL,
+    package_name VARCHAR(150) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    people INT NOT NULL,
+    total DECIMAL(14, 2) NOT NULL,
+    snapshot MEDIUMTEXT NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'REQUESTED',
+    request_key VARCHAR(80) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, request_key),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (package_id) REFERENCES travel_packages (id)
+);
+
+CREATE TABLE IF NOT EXISTS booking_payments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    booking_id BIGINT NOT NULL,
+    actor_id BIGINT NOT NULL,
+    kind VARCHAR(20) NOT NULL,
+    amount DECIMAL(14, 2) NOT NULL,
+    reference VARCHAR(150) NOT NULL UNIQUE,
+    note VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES package_bookings (id),
+    FOREIGN KEY (actor_id) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS package_photos (
+    package_id BIGINT PRIMARY KEY,
+    photo MEDIUMBLOB NOT NULL,
+    FOREIGN KEY (package_id) REFERENCES travel_packages (id) ON DELETE CASCADE
+);

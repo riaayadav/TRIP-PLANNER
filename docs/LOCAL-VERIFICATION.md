@@ -1,5 +1,7 @@
 # Local functionality verification — 7 September 2026
 
+This report records an earlier verification pass. See [Packages](PACKAGES.md) for the package workflow and [Maintenance](MAINTENANCE.md) for the readability refactor.
+
 Deployment is deferred at the user's request. This pass focused on working client/admin behavior and local startup.
 
 ## Fixed and tested
@@ -19,19 +21,19 @@ Deployment is deferred at the user's request. This pass focused on working clien
 
 ## Evidence
 
-| Check | Result |
-|---|---|
-| H2 HTTP integration suite | 17 tests, zero failures/errors |
-| MySQL 8.0.46 HTTP integration suite | 16 tests, zero failures/errors on a disposable local schema |
-| Additional MySQL catalog regression | Passed separately on a fresh disposable database: empty list validation and legacy itinerary fallback |
-| JavaScript regression suite | 4 tests, zero failures |
-| JavaScript syntax | Passed |
-| PowerShell launcher parsing | Passed |
-| Local launcher | Started Tomcat successfully on 127.0.0.1:8080 |
-| MySQL startup mode | Started against the disposable local MySQL schema with initialization disabled; HTTP health check returned ok |
-| Browser | Login, trip creation, zero-budget display/editing, packing edit dialog/save and unchanged packing count verified |
-| Seasonal page | All four keyboard-focused icons reported their intended animation names; layout and visible focus outline inspected in-browser. The loaded reduced-motion stylesheet contains an important global animation override; OS preference switching was not exercised. |
-| Mixed MySQL workload | 12 concurrent users, 108 requests, zero failures; local warm-server p95 90 ms, maximum 104 ms |
+| Check                               | Result                                                                                                                                                                                                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H2 HTTP integration suite           | 17 tests, zero failures/errors                                                                                                                                                                                                                                   |
+| MySQL 8.0.46 HTTP integration suite | 16 tests, zero failures/errors on a disposable local schema                                                                                                                                                                                                      |
+| Additional MySQL catalog regression | Passed separately on a fresh disposable database: empty list validation and legacy itinerary fallback                                                                                                                                                            |
+| JavaScript regression suite         | 4 tests, zero failures                                                                                                                                                                                                                                           |
+| JavaScript syntax                   | Passed                                                                                                                                                                                                                                                           |
+| PowerShell launcher parsing         | Passed                                                                                                                                                                                                                                                           |
+| Local launcher                      | Started Tomcat successfully on 127.0.0.1:8080                                                                                                                                                                                                                    |
+| MySQL startup mode                  | Started against the disposable local MySQL schema with initialization disabled; HTTP health check returned ok                                                                                                                                                    |
+| Browser                             | Login, trip creation, zero-budget display/editing, packing edit dialog/save and unchanged packing count verified                                                                                                                                                 |
+| Seasonal page                       | All four keyboard-focused icons reported their intended animation names; layout and visible focus outline inspected in-browser. The loaded reduced-motion stylesheet contains an important global animation override; OS preference switching was not exercised. |
+| Mixed MySQL workload                | 12 concurrent users, 108 requests, zero failures; local warm-server p95 90 ms, maximum 104 ms                                                                                                                                                                    |
 
 The Java suite also covers client ownership, CSRF, trip status/dates, expenses, generated itinerary/packing, photo privacy, feedback uniqueness/replies, admin publication/settings/access, pagination, password revocation, shared sessions, logout and login throttling.
 

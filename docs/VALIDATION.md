@@ -1,21 +1,23 @@
 # Verification record
 
+This report records an earlier verification pass. See [Packages](PACKAGES.md) for the package workflow and [Maintenance](MAINTENANCE.md) for the readability refactor.
+
 Verified locally on 6 September 2026. This record distinguishes tested application behavior from deployment work that still requires the operator’s environment.
 
 ## Executed checks
 
-| Check | Result |
-|---|---|
-| Maven compile, integration tests and WAR packaging | PASS — `mvn verify`, Java release target 17 |
-| H2 integration suite | PASS — 11 scenarios, 0 failures, 0 errors |
-| MySQL 8.0.46 integration suite | PASS — the same 11 scenarios, 0 failures, 0 errors |
-| JavaScript syntax | PASS — Node `--check` |
-| MySQL backup and restoration | PASS — all 14 tables matched using extended checksums after restore to a separate database |
-| Local browser client flow | PASS — registration, dashboard, trip creation, generated three-day itinerary, expense entry and over-budget total |
-| Local browser admin flow | PASS — role-based access, management screen, experience settings save and name/email user search |
-| Recommendations and comparison | PASS — ranked results, preserved selection state, two-destination comparison |
-| Mobile layout | PASS for sampled 390 × 844 viewport — destination filters/cards, navigation and recommendations; no horizontal page overflow in the measured recommendation view |
-| Browser console | No errors observed during the sampled workflows |
+| Check                                              | Result                                                                                                                                                           |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Maven compile, integration tests and WAR packaging | PASS — `mvn verify`, Java release target 17                                                                                                                      |
+| H2 integration suite                               | PASS — 11 scenarios, 0 failures, 0 errors                                                                                                                        |
+| MySQL 8.0.46 integration suite                     | PASS — the same 11 scenarios, 0 failures, 0 errors                                                                                                               |
+| JavaScript syntax                                  | PASS — Node `--check`                                                                                                                                            |
+| MySQL backup and restoration                       | PASS — all 14 tables matched using extended checksums after restore to a separate database                                                                       |
+| Local browser client flow                          | PASS — registration, dashboard, trip creation, generated three-day itinerary, expense entry and over-budget total                                                |
+| Local browser admin flow                           | PASS — role-based access, management screen, experience settings save and name/email user search                                                                 |
+| Recommendations and comparison                     | PASS — ranked results, preserved selection state, two-destination comparison                                                                                     |
+| Mobile layout                                      | PASS for sampled 390 × 844 viewport — destination filters/cards, navigation and recommendations; no horizontal page overflow in the measured recommendation view |
+| Browser console                                    | No errors observed during the sampled workflows                                                                                                                  |
 
 ## Automated scenarios
 
@@ -47,6 +49,3 @@ No production deployment has been made. The tests substantiate the behaviors abo
 ## Shared-session revision verification
 
 The latest H2 run passed all 11 scenarios with zero failures/errors, including cross-instance session sharing/logout revocation and 12 concurrent users executing 108 mixed HTTP requests. Warm local p95 was 103 ms; maximum 152 ms. The latest MySQL 8.0.46 run also passed all 11 scenarios against a fresh schema-version-2 database. Its 108-request mixed workload had zero failures, p95 172 ms and maximum 239 ms. A fresh dump restored into a separate database matched all 14 tables by extended checksum. Docker/Vercel and hosted Aiven have not yet been exercised.
-
-
-

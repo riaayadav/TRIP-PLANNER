@@ -2,3 +2,7 @@ target
 .git
 .env
 *.zip
+
+.local-data/
+tools/
+release/

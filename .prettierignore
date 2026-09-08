@@ -1,0 +1,6 @@
+target/
+release/
+tools/
+.local-data/
+src/main/webapp/assets/bootstrap.min.css
+**/*.jsp

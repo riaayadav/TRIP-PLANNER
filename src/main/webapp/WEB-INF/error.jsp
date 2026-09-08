@@ -1,2 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" session="false" %>
-<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trip Planner · Something went wrong</title></head><body><h1>We couldn’t open this page.</h1><p>Please return to Trip Planner and try again.</p><a href="<%=request.getContextPath()%>/">Return to Trip Planner</a></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Trip Planner · Something went wrong</title>
+  </head>
+  <body>
+    <h1>We couldn’t open this page.</h1>
+    <p>Please return to Trip Planner and try again.</p>
+    <a href="<%=request.getContextPath()%>/">Return to Trip Planner</a>
+  </body>
+</html>

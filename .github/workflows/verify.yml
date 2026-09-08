@@ -9,7 +9,7 @@ jobs:
         env:
           MYSQL_DATABASE: trip_planner_test
           MYSQL_ROOT_PASSWORD: ci-test-only-password
-        ports: ["3306:3306"]
+        ports: ['3306:3306']
         options: >-
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s --health-timeout=5s --health-retries=10

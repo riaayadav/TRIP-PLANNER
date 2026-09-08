@@ -2,9 +2,9 @@
 
 ## MVC boundaries
 
-- **View:** `WEB-INF/app.jsp` supplies the HTML document. Bootstrap, `app.css` and `app.js` render the client/admin views and submit JSON through same-origin requests. JSP is private under `WEB-INF` and reached through the page controller.
+- **View:** `WEB-INF/app.jsp` supplies the HTML document. Bootstrap, `app.css`, `app.js` and `packages.js` render the client/admin views and submit JSON through same-origin requests. JSP is private under `WEB-INF` and reached through the page controller.
 - **Controller:** `PageController` serves the JSP and browser security headers. `ApiController` validates sessions, roles, CSRF tokens, request formats and dispatches actions. `RequestGuard` provides bounded per-IP request limits.
-- **Model/service:** `TripService` enforces ownership, dates, statuses, item limits, budget precision and transactional trip generation. `Security` implements password validation, PBKDF2 hashing and secure random tokens.
+- **Model/service:** `TripService` enforces ownership, dates, statuses, item limits, budget precision and transactional trip generation. `PackageService` owns package publication, booking snapshots and the simulated payment ledger. `Security` implements password validation, PBKDF2 hashing and secure random tokens.
 - **DAO:** `Database` manages the HikariCP connection pool, prepared JDBC statements, schema bootstrap and catalog seeds. All result sets/statements/connections are closed. Writes roll back on failures.
 
 This is a Servlet/JSP MVC application with a JavaScript view layer, not a frontend-only simulation. Client data is stored in MySQL in production, not browser local storage.
@@ -25,6 +25,12 @@ erDiagram
     TRIPS ||--o| FEEDBACK : receives
     USERS ||--o{ FEEDBACK : writes
     USERS ||--o{ AUDIT_LOG : acts
+    DESTINATIONS ||--o{ TRAVEL_PACKAGES : describes
+    HOTELS ||--o{ TRAVEL_PACKAGES : accommodates
+    TRANSPORT_OPTIONS ||--o{ TRAVEL_PACKAGES : transports
+    USERS ||--o{ PACKAGE_BOOKINGS : requests
+    TRAVEL_PACKAGES ||--o{ PACKAGE_BOOKINGS : offered_as
+    PACKAGE_BOOKINGS ||--o{ BOOKING_PAYMENTS : records
 ```
 
 Other tables: `settings`, `login_attempts`, `schema_version`, `web_sessions`.
@@ -46,4 +52,3 @@ Other tables: `settings`, `login_attempts`, `schema_version`, `web_sessions`.
 Connection pool: 5 maximum per instance (configurable), 0 minimum idle. Query timeout: 10 seconds. API body cap: 4.4 MB. User limits: 200 trips, 200 memories; each trip supports 500 entries per itinerary/packing/expense list. Photos are fetched separately from metadata and lazy-loaded. Assets are local; no production CDN dependency. All money uses decimal values server-side.
 
 This is sized as a small-to-medium single-instance planning application. The current catalog/query cap is 1,000 rows; admin account and feedback screens paginate 50 records at a time, audit shows the latest 100. Larger deployments should add indexed full-text catalog search before exceeding these stated limits. Sessions are shared through MySQL with hashed session keys and 30-minute expiry; scale-out requires aggregate connection budgeting and edge rate limits.
-

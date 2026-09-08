@@ -3,7 +3,7 @@
 ## Release procedure
 
 1. Build and test with `mvn clean verify` on JDK 17+. Archive the WAR and this source revision together.
-2. Back up the existing database before a release. Bootstrap schema version 2 once on a single application instance. `DB_INITIALIZE=false` skips bootstrap after schema creation and requires version 2 to exist.
+2. Back up the existing database before a release. Bootstrap schema version 3 once on a single application instance. `DB_INITIALIZE=false` skips bootstrap after schema creation and requires version 3 to exist.
 3. Store credentials outside source control. Provision a restricted MySQL account. Remove bootstrap `ADMIN_PASSWORD` from the runtime after initial admin creation.
 4. Deploy the WAR to Tomcat 10.1; use the supplied server settings or equivalent. Avoid exposing Tomcat Manager or the database port publicly.
 5. Configure a provider hostname or custom domain and valid TLS certificate at nginx or an equivalent trusted reverse proxy. Use the supplied nginx example. HTTP is only for localhost development.
@@ -39,16 +39,15 @@ If the first database bootstrap is interrupted, restart the single bootstrap ins
 
 ## Runtime configuration
 
-| Variable | Purpose |
-|---|---|
-| DB_URL | JDBC MySQL URL; default localhost database |
-| DB_USER | Service account; default trip_planner |
-| DB_PASSWORD | Database password; no usable production default |
-| DB_INITIALIZE | `true` initially; `false` after controlled bootstrap |
-| ADMIN_EMAIL | Initial administrator email, only if no admin exists |
-| ADMIN_PASSWORD | Initial administrator password, minimum 12 characters |
-| JAVA_OPTS | Heap sizing and JVM options in Tomcat deployment |
-| TZ | Server business-date time zone; keep consistent across app and DB |
+| Variable       | Purpose                                                           |
+| -------------- | ----------------------------------------------------------------- |
+| DB_URL         | JDBC MySQL URL; default localhost database                        |
+| DB_USER        | Service account; default trip_planner                             |
+| DB_PASSWORD    | Database password; no usable production default                   |
+| DB_INITIALIZE  | `true` initially; `false` after controlled bootstrap              |
+| ADMIN_EMAIL    | Initial administrator email, only if no admin exists              |
+| ADMIN_PASSWORD | Initial administrator password, minimum 12 characters             |
+| JAVA_OPTS      | Heap sizing and JVM options in Tomcat deployment                  |
+| TZ             | Server business-date time zone; keep consistent across app and DB |
 
 Use server-side UTC timestamps for operations where possible. Trip dates are calendar dates; countdown uses the traveler’s device time zone, as disclosed in the view.
-

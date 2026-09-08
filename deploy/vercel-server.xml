@@ -1,7 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Server port="-1">
   <Service name="Catalina">
-    <Connector port="${roam.http.port}" protocol="HTTP/1.1" connectionTimeout="20000" maxThreads="48" maxConnections="256" acceptCount="48" maxPostSize="4400000" maxSwallowSize="4400000" maxHttpRequestHeaderSize="16384" server="Roam" scheme="https" secure="true" compression="on" compressionMinSize="1024" compressibleMimeType="text/html,text/css,application/javascript,application/json" />
+    <Connector
+      port="${roam.http.port}"
+      protocol="HTTP/1.1"
+      connectionTimeout="20000"
+      maxThreads="48"
+      maxConnections="256"
+      acceptCount="48"
+      maxPostSize="4400000"
+      maxSwallowSize="4400000"
+      maxHttpRequestHeaderSize="16384"
+      server="Roam"
+      scheme="https"
+      secure="true"
+      compression="on"
+      compressionMinSize="1024"
+      compressibleMimeType="text/html,text/css,application/javascript,application/json"
+    />
     <Engine name="Catalina" defaultHost="localhost">
       <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="false" />
     </Engine>
