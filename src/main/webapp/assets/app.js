@@ -227,7 +227,7 @@ function shell(content) {
 }
 function card(d) {
   const saved = state.data.wishlist.some((w) => w.id === d.id);
-  return `<article class="destination-card"><div class="card-image"><img loading="lazy" src="assets/${escapeHtml(d.image)}" alt="${escapeHtml(d.category)} travel inspiration"><span class="season-pill">${escapeHtml(d.season)} escape</span></div><div class="card-body"><h3>${escapeHtml(d.name)}</h3><p>${escapeHtml(d.region)}</p><div class="card-bottom"><div><strong>${formatMoney(d.daily_cost)}</strong><small> / person / day</small></div><span class="pill">${d.duration} days</span></div><div class="card-actions">${button('Explore ↗', 'detail', d.id, 'btn-primary btn-sm')}${button(saved ? '♥ Saved' : '♡ Save', 'wish', d.id, 'btn-light btn-sm')}${button(state.compare.has(d.id) ? '✓ Compare' : '⇄ Compare', 'compare-add', d.id, 'btn-light btn-sm')}</div></div></article>`;
+  return `<article class="destination-card"><div class="card-image"><img loading="lazy" src="${escapeHtml(destinationImage(d.image))}" alt="${escapeHtml(d.category)} travel inspiration"><span class="season-pill">${escapeHtml(d.season)} escape</span></div><div class="card-body"><h3>${escapeHtml(d.name)}</h3><p>${escapeHtml(d.region)}</p><div class="card-bottom"><div><strong>${formatMoney(d.daily_cost)}</strong><small> / person / day</small></div><span class="pill">${d.duration} days</span></div><div class="card-actions">${button('Explore ↗', 'detail', d.id, 'btn-primary btn-sm')}${button(saved ? '♥ Saved' : '♡ Save', 'wish', d.id, 'btn-light btn-sm')}${button(state.compare.has(d.id) ? '✓ Compare' : '⇄ Compare', 'compare-add', d.id, 'btn-light btn-sm')}</div></div></article>`;
 }
 function nextTrip() {
   return state.data.trips
@@ -267,7 +267,7 @@ function explore(params = {}) {
       'Find your somewhere.',
       'Mountains, coastlines, city streets. There’s a place for every kind of trip.',
     ) +
-    `<form data-form="filter" class="filterbar">${input('q', 'Search destinations', params.q || '', 'search', 'placeholder="Where do you want to go?" maxlength="100"')}${select('season', 'Best season', [['', 'All seasons'], 'Summer', 'Monsoon', 'Autumn', 'Winter'], season)}${select('category', 'Trip type', [['', 'All types'], 'Adventure', 'Beach', 'Nature', 'Culture', 'Relaxation'], category)}<button class="btn btn-primary">Apply</button></form><p class="note">${list.length} destinations · Sample estimates in INR; confirm current prices before travel.</p><div class="cards">${list.map(card).join('')}</div>${list.length ? '' : empty('No destinations match', 'Try another season, category or search term.')}`
+    `<form data-form="filter" class="filterbar">${input('q', 'Search destinations', params.q || '', 'search', 'placeholder="Where do you want to go?" maxlength="100"')}${select('season', 'Best season', [['', 'All seasons'], 'Summer', 'Monsoon', 'Autumn', 'Winter'], season)}${select('category', 'Trip type', [['', 'All types'], ...destinationCategories()], category)}<button class="btn btn-primary">Apply</button></form><p class="note">${list.length} destinations · Sample estimates in INR; confirm current prices before travel.</p><div class="cards">${list.map(card).join('')}</div>${list.length ? '' : empty('No destinations match', 'Try another season, category or search term.')}`
   );
 }
 function season() {
@@ -313,7 +313,7 @@ function matching(body) {
 function perfect() {
   return (
     heading('Find your kind of adventure.', 'A few preferences. A shortlist that feels like you.') +
-    `<form data-form="perfect" class="panel form-grid">${select('season', 'Season', ['Summer', 'Monsoon', 'Autumn', 'Winter'], state.perfectQuery?.season)}${select('category', 'Trip type', ['Adventure', 'Beach', 'Nature', 'Culture', 'Relaxation'], state.perfectQuery?.category)}${input('budget', 'Total budget per person (INR)', state.perfectQuery?.budget || '20000', 'number', 'min="1" max="99999999" required')}${input('duration', 'Duration in days', state.perfectQuery?.duration || '5', 'number', 'min="1" max="60" required')}${input('interests', 'Interests (comma separated)', state.perfectQuery?.interests || 'Nature, Food', 'text', 'maxlength="500" placeholder="Nature, Culture, Food"')}${submit('Find my matches ↗')}</form><div id="matches">${state.perfectQuery ? matching(state.perfectQuery) : ''}</div>`
+    `<form data-form="perfect" class="panel form-grid">${select('season', 'Season', ['Summer', 'Monsoon', 'Autumn', 'Winter'], state.perfectQuery?.season)}${select('category', 'Trip type', destinationCategories(), state.perfectQuery?.category)}${input('budget', 'Total budget per person (INR)', state.perfectQuery?.budget || '20000', 'number', 'min="1" max="99999999" required')}${input('duration', 'Duration in days', state.perfectQuery?.duration || '5', 'number', 'min="1" max="60" required')}${input('interests', 'Interests (comma separated)', state.perfectQuery?.interests || 'Nature, Food', 'text', 'maxlength="500" placeholder="Nature, Culture, Food"')}${submit('Find my matches ↗')}</form><div id="matches">${state.perfectQuery ? matching(state.perfectQuery) : ''}</div>`
   );
 }
 function plan(t = null, selected = '') {
@@ -714,19 +714,16 @@ function childForm(kind, item = {}) {
     `<form data-form="${kind}" class="form-grid">${fields}${submit()}</form>`,
   );
 }
+function destinationImage(image) {
+  return /^api\/destination-photo\?id=\d+$/.test(image || '') ? image : 'assets/' + image;
+}
+function destinationCategories() {
+  return [...new Set(state.data.destinations.map((destination) => destination.category))].sort();
+}
 function destinationForm(d = {}) {
   openDialog(
     d.id ? 'Edit destination' : 'Add destination',
-    `<form data-form="admin-destination" class="form-grid">${d.id ? `<input type="hidden" name="id" value="${d.id}">` : ''}${input('name', 'Destination name', d.name || '', 'text', 'required maxlength="120"')}${input('region', 'Region / country', d.region || '', 'text', 'required maxlength="120"')}${area('description', 'Description', d.description || '', 4000)}${select('season', 'Best season', ['Summer', 'Monsoon', 'Autumn', 'Winter'], d.season)}${select('category', 'Category', ['Adventure', 'Beach', 'Nature', 'Culture', 'Relaxation'], d.category)}${input('daily_cost', 'Daily estimate per person (INR)', d.daily_cost || 0, 'number', 'required min="0" max="99999999.99" step="0.01"')}${input('duration', 'Suggested days', d.duration || 3, 'number', 'required min="1" max="60"')}${input('activities', 'Activities (comma separated)', d.activities || '', 'text', 'required maxlength="1000"')}${input('attractions', 'Attractions (comma separated)', d.attractions || '', 'text', 'required maxlength="1000"')}${select(
-      'image',
-      'Cover image',
-      [
-        ['mountains.jpg', 'Mountain landscape'],
-        ['coast.jpg', 'Coastal landscape'],
-        ['city.jpg', 'City architecture'],
-      ],
-      d.image,
-    )}${select(
+    `<form data-form="admin-destination" class="form-grid">${d.id ? `<input type="hidden" name="id" value="${d.id}">` : ''}${input('name', 'Destination name', d.name || '', 'text', 'required maxlength="120"')}${input('region', 'Region / country', d.region || '', 'text', 'required maxlength="120"')}${area('description', 'Description', d.description || '', 4000)}${select('season', 'Best season', ['Summer', 'Monsoon', 'Autumn', 'Winter'], d.season)}${input('category', 'Category', d.category || '', 'text', 'required maxlength="40" placeholder="e.g. Wildlife, Wellness or Heritage"')}${input('daily_cost', 'Daily estimate per person (INR)', d.daily_cost || 0, 'number', 'required min="0" max="99999999.99" step="0.01"')}${input('duration', 'Suggested days', d.duration || 3, 'number', 'required min="1" max="60"')}${input('activities', 'Activities (comma separated)', d.activities || '', 'text', 'required maxlength="1000"')}${input('attractions', 'Attractions (comma separated)', d.attractions || '', 'text', 'required maxlength="1000"')}${input('photo_file', 'Cover photo (JPEG or PNG, up to 3 MB)', '', 'file', 'accept="image/jpeg,image/png" ' + (d.id ? '' : 'required'))}${d.id ? `<p class="note full">Leave the photo empty to keep the current cover.</p><img class="photo-detail full" src="${escapeHtml(destinationImage(d.image))}" alt="Current destination cover">` : ''}${select(
       'active',
       'Visibility',
       [
@@ -789,7 +786,7 @@ document.addEventListener('click', async (event) => {
         const d = findDestination(id) || state.data.wishlist.find((d) => d.id === id);
         openDialog(
           d.name,
-          `<img class="photo-detail" src="assets/${escapeHtml(d.image)}" alt="${escapeHtml(d.category)} travel inspiration"><p class="small-label">${escapeHtml(d.region)}</p><p>${escapeHtml(d.description)}</p><div class="form-grid"><div><h3>Best season</h3><p>${escapeHtml(d.season)}</p></div><div><h3>Planning estimate</h3><p>${formatMoney(d.daily_cost)} / person / day</p></div><div><h3>Things to do</h3><p>${escapeHtml(d.activities)}</p></div><div><h3>Places to see</h3><p>${escapeHtml(d.attractions)}</p></div></div><p class="note">Suggested duration: ${d.duration} days. Cover photos are travel inspiration, not verified images of this destination.</p><div class="actions">${d.active ? `<a class="btn btn-primary" href="#plan/${d.id}">Plan this trip ↗</a>` : '<p>This destination is currently unavailable for new trips.</p>'}${button('Save / remove wishlist', 'wish', d.id)}</div>`,
+          `<img class="photo-detail" src="${escapeHtml(destinationImage(d.image))}" alt="${escapeHtml(d.category)} travel inspiration"><p class="small-label">${escapeHtml(d.region)}</p><p>${escapeHtml(d.description)}</p><div class="form-grid"><div><h3>Best season</h3><p>${escapeHtml(d.season)}</p></div><div><h3>Planning estimate</h3><p>${formatMoney(d.daily_cost)} / person / day</p></div><div><h3>Things to do</h3><p>${escapeHtml(d.activities)}</p></div><div><h3>Places to see</h3><p>${escapeHtml(d.attractions)}</p></div></div><p class="note">Suggested duration: ${d.duration} days. Cover photos are travel inspiration, not verified images of this destination.</p><div class="actions">${d.active ? `<a class="btn btn-primary" href="#plan/${d.id}">Plan this trip ↗</a>` : '<p>This destination is currently unavailable for new trips.</p>'}${button('Save / remove wishlist', 'wish', d.id)}</div>`,
         );
         break;
       }
@@ -1003,7 +1000,7 @@ document.addEventListener('submit', async (event) => {
       toast('Password changed. Sign in with your new password.');
       return;
     }
-    if (type === 'memory') {
+    if (type === 'memory' || type === 'admin-destination') {
       const file = body.photo_file;
       delete body.photo_file;
       if (file?.size) {
@@ -1017,7 +1014,12 @@ document.addEventListener('submit', async (event) => {
           r.readAsDataURL(file);
         });
       }
-      await mutation('memory', body, 'Memory saved.');
+      if (type === 'admin-destination') body.active = body.active === 'true';
+      await mutation(
+        type === 'memory' ? 'memory' : 'admin/destination',
+        body,
+        type === 'memory' ? 'Memory saved.' : 'Destination saved.',
+      );
       return;
     }
     if (type === 'confirmed') {

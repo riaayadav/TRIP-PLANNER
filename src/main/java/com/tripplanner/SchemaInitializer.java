@@ -10,7 +10,7 @@ public final class SchemaInitializer {
         try (Database database = new Database()) {
             database.initialize();
         }
-        System.out.println("Database initialized and migrated to schema version 3.");
+        System.out.println("Database initialized and migrated to schema version 4.");
     }
 
     private SchemaInitializer() {}

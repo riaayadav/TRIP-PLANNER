@@ -14,5 +14,5 @@ CREATE,
 INDEX,
 REFERENCES ON trip_planner.* TO 'trip_planner' @'localhost';
 
--- Initial startup creates schema version 3. After bootstrap, optionally revoke
+-- Initial startup creates schema version 4. After bootstrap, optionally revoke
 -- CREATE, INDEX and REFERENCES and set DB_INITIALIZE=false for normal runtime.

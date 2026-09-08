@@ -3,7 +3,7 @@
 ## Release procedure
 
 1. Build and test with `mvn clean verify` on JDK 17+. Archive the WAR and this source revision together.
-2. Back up the existing database before a release. Bootstrap schema version 3 once on a single application instance. `DB_INITIALIZE=false` skips bootstrap after schema creation and requires version 3 to exist.
+2. Back up the existing database before a release. Bootstrap schema version 4 once on a single application instance. `DB_INITIALIZE=false` skips bootstrap after schema creation and requires version 4 to exist.
 3. Store credentials outside source control. Provision a restricted MySQL account. Remove bootstrap `ADMIN_PASSWORD` from the runtime after initial admin creation.
 4. Deploy the WAR to Tomcat 10.1; use the supplied server settings or equivalent. Avoid exposing Tomcat Manager or the database port publicly.
 5. Configure a provider hostname or custom domain and valid TLS certificate at nginx or an equivalent trusted reverse proxy. Use the supplied nginx example. HTTP is only for localhost development.

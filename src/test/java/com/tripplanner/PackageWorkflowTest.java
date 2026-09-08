@@ -375,4 +375,85 @@ class PackageWorkflowTest {
             }
         }
     }
+
+    @Test
+    void destinationCustomCategoryAndCoverUpload() throws Exception {
+        Client admin = new Client();
+        admin.session();
+        admin.post(
+            "login",
+            Map.of("email", "admin@test.invalid", "password", "Admin-test-only-1234"),
+            200
+        );
+        admin.session();
+        Client traveler = new Client();
+        traveler.register("destination-photo@test.invalid");
+        var image = new java.awt.image.BufferedImage(
+            8,
+            8,
+            java.awt.image.BufferedImage.TYPE_INT_RGB
+        );
+        var bytes = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(image, "png", bytes);
+        var body = new LinkedHashMap<String, Object>();
+        body.put("name", "Cover upload fixture");
+        body.put("region", "Test region");
+        body.put("description", "Uploaded cover");
+        body.put("season", "Summer");
+        body.put("category", "Wildlife & birdwatching");
+        body.put("daily_cost", "1200");
+        body.put("duration", 3);
+        body.put("activities", "Birdwatching");
+        body.put("attractions", "Nature reserve");
+        body.put("active", true);
+        body.put(
+            "photo",
+            "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes.toByteArray())
+        );
+        traveler.post("admin/destination", body, 403);
+        long id = admin.post("admin/destination", body, 200).path("id").asLong();
+        try {
+            JsonNode saved = null;
+            for (var destination : traveler.get("data", 200).path("destinations"))
+                if (destination.path("id").asLong() == id) saved = destination;
+            assertNotNull(saved);
+            assertEquals("Wildlife & birdwatching", saved.path("category").asText());
+            assertEquals("api/destination-photo?id=" + id, saved.path("image").asText());
+            var photoRequest = HttpRequest.newBuilder(
+                URI.create(base + "/api/destination-photo?id=" + id)
+            )
+                .GET()
+                .build();
+            var photo = traveler.http.send(photoRequest, HttpResponse.BodyHandlers.ofByteArray());
+            assertEquals(200, photo.statusCode());
+            assertEquals("image/jpeg", photo.headers().firstValue("content-type").orElse(""));
+            assertNotNull(
+                javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(photo.body()))
+            );
+            body.put("id", id);
+            body.remove("photo");
+            body.put("category", "Wellness retreats");
+            admin.post("admin/destination", body, 200);
+            assertArrayEquals(
+                photo.body(),
+                traveler.http.send(photoRequest, HttpResponse.BodyHandlers.ofByteArray()).body()
+            );
+            body.put("photo", "data:image/png;base64,bm90LWFuLWltYWdl");
+            body.put("name", "Must not persist");
+            admin.post("admin/destination", body, 400);
+            for (var destination : traveler.get("data", 200).path("destinations"))
+                if (destination.path("id").asLong() == id) assertEquals(
+                    "Cover upload fixture",
+                    destination.path("name").asText()
+                );
+            body.remove("photo");
+            body.put("category", " ");
+            admin.post("admin/destination", body, 400);
+        } finally {
+            body.remove("photo");
+            body.put("category", "Wildlife");
+            body.put("active", false);
+            admin.post("admin/destination", body, 200);
+        }
+    }
 }

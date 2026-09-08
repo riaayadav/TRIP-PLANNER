@@ -94,10 +94,10 @@ public final class Database implements AutoCloseable {
                 if (
                     query(
                         connection,
-                        "SELECT version FROM schema_version WHERE version=3"
+                        "SELECT version FROM schema_version WHERE version=4"
                     ).isEmpty()
                 ) throw new SQLException(
-                    "Schema version 3 is required; run the controlled migration before deployment"
+                    "Schema version 4 is required; run the controlled migration before deployment"
                 );
                 return;
             }
@@ -181,6 +181,13 @@ public final class Database implements AutoCloseable {
                 "CREATE TABLE IF NOT EXISTS package_photos (package_id BIGINT PRIMARY KEY, photo MEDIUMBLOB NOT NULL, FOREIGN KEY(package_id) REFERENCES travel_packages(id) ON DELETE CASCADE)"
             );
 
+            if (query(connection, "SELECT version FROM schema_version WHERE version=4").isEmpty()) {
+                execute(
+                    connection,
+                    "CREATE TABLE IF NOT EXISTS destination_photos (destination_id BIGINT PRIMARY KEY, photo MEDIUMBLOB NOT NULL, FOREIGN KEY(destination_id) REFERENCES destinations(id) ON DELETE CASCADE)"
+                );
+                execute(connection, "INSERT INTO schema_version(version) VALUES (4)");
+            }
             if (query(connection, "SELECT id FROM destinations LIMIT 1").isEmpty()) seed(
                 connection
             );

@@ -7,9 +7,9 @@
     <meta name="description" content="Discover destinations, plan your itinerary and keep every part of your trip in one place.">
     <title>Roam · Trip Planner</title>
     <link rel="stylesheet" href="assets/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/app.css?v=readability-5">
-    <script defer src="assets/packages.js?v=readability-5"></script>
-    <script defer src="assets/app.js?v=readability-5"></script>
+    <link rel="stylesheet" href="assets/app.css?v=destination-6">
+    <script defer src="assets/packages.js?v=destination-6"></script>
+    <script defer src="assets/app.js?v=destination-6"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>

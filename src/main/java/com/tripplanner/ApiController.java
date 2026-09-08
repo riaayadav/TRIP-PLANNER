@@ -144,6 +144,26 @@ public final class ApiController extends HttpServlet {
                     write(response, PackageService.overview(connection, userId, true));
                     return;
                 }
+                if (path.equals("/destination-photo")) {
+                    long id = parseId(request.getParameter("id"));
+                    var rows = query(
+                        connection,
+                        "SELECT p.photo FROM destination_photos p JOIN destinations d ON d.id=p.destination_id WHERE p.destination_id=? AND (d.active=TRUE OR ?=TRUE)",
+                        id,
+                        "ADMIN".equals(user.get("role"))
+                    );
+                    if (rows.isEmpty()) throw new Missing();
+                    Object raw = rows.get(0).get("photo");
+                    byte[] bytes =
+                        raw instanceof Blob blob
+                            ? blob.getBytes(1, (int) blob.length())
+                            : (byte[]) raw;
+                    response.setCharacterEncoding(null);
+                    response.setContentType("image/jpeg");
+                    response.setContentLength(bytes.length);
+                    response.getOutputStream().write(bytes);
+                    return;
+                }
                 if (path.equals("/data")) {
                     write(response, data(connection, userId));
                     return;
@@ -389,18 +409,30 @@ public final class ApiController extends HttpServlet {
                                 "Autumn",
                                 "Winter"
                             ),
-                            category = choice(
-                                body,
-                                "category",
-                                "Adventure",
-                                "Beach",
-                                "Nature",
-                                "Culture",
-                                "Relaxation"
-                            ),
+                            category = text(body, "category", 40),
                             activities = listText(body, "activities", 1000),
                             attractions = listText(body, "attractions", 1000),
+                            img =
+                                id == 0
+                                    ? "mountains.jpg"
+                                    : query(
+                                          connection,
+                                          "SELECT image FROM destinations WHERE id=? FOR UPDATE",
+                                          id
+                                      )
+                                          .stream()
+                                          .findFirst()
+                                          .orElseThrow(Missing::new)
+                                          .get("image")
+                                          .toString();
+                        byte[] uploadedPhoto = body.containsKey("photo") ? photo(body) : null;
+                        if (
+                            body.containsKey("image") &&
+                            uploadedPhoto == null &&
+                            !img.startsWith("api/")
+                        ) {
                             img = choice(body, "image", "mountains.jpg", "coast.jpg", "city.jpg");
+                        }
                         Object[] args = {
                             name,
                             region,
@@ -430,6 +462,26 @@ public final class ApiController extends HttpServlet {
                                 ) == 0
                             ) throw new Missing();
                         }
+                        if (uploadedPhoto != null) {
+                            execute(
+                                connection,
+                                "DELETE FROM destination_photos WHERE destination_id=?",
+                                id
+                            );
+                            execute(
+                                connection,
+                                "INSERT INTO destination_photos(destination_id,photo) VALUES (?,?)",
+                                id,
+                                uploadedPhoto
+                            );
+                            execute(
+                                connection,
+                                "UPDATE destinations SET image=? WHERE id=?",
+                                "api/destination-photo?id=" + id,
+                                id
+                            );
+                        }
+                        out.put("id", id);
                         audit(connection, userId, "Saved destination", id);
                     }
                     case "/admin/user" -> {

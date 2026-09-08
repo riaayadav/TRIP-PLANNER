@@ -36,7 +36,7 @@ To use MySQL instead:
 
 The launcher asks for the JDBC URL, database user and password. It also accepts `DB_URL`, `DB_USER` and `DB_PASSWORD` from the environment. A local URL is `jdbc:mysql://127.0.0.1:3306/trip_planner?connectionTimeZone=UTC`. Create the database and service account first; `deploy/mysql-setup.sql` is a starting point.
 
-The application initializes or migrates its tables at startup unless `DB_INITIALIZE=false`. The current schema version is 3. Existing version-2 databases need initialization enabled once to apply the package migration. Local H2, local MySQL and hosted MySQL are separate databases.
+The application initializes or migrates its tables at startup unless `DB_INITIALIZE=false`. The current schema version is 4. Existing version-2 databases need initialization enabled once to apply the package migration. Local H2, local MySQL and hosted MySQL are separate databases.
 
 For Aiven certificate and truststore setup, see [Hosted database](docs/HOSTED-DATABASE.md). Keep credentials in the environment rather than source files.
 

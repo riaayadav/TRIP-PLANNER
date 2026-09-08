@@ -24,7 +24,7 @@ $env:DB_INITIALIZE='true'
 mvn -B compile exec:java '-Dexec.mainClass=com.tripplanner.SchemaInitializer'
 ```
 
-Continue only after the command reports schema version 3 initialized. This creates tables, sample destinations and the administrator. Do not run the integration tests against this database: tests create disposable fixtures. Remove the administrator bootstrap password from your shell afterwards:
+Continue only after the command reports schema version 4 initialized. This creates tables, sample destinations and the administrator. Do not run the integration tests against this database: tests create disposable fixtures. Remove the administrator bootstrap password from your shell afterwards:
 
 ```powershell
 Remove-Item Env:ADMIN_PASSWORD

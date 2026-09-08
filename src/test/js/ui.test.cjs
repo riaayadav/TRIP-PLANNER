@@ -140,3 +140,17 @@ test('administrator login route redirects to the operations workspace', async ()
   await v.run('render()');
   assert.equal(v.run('location.hash'), 'operations');
 });
+
+test('destination editor uses category text and photo upload while preserving an existing cover', () => {
+  const v = view();
+  v.run("destinationForm({id:7,category:'Wildlife',image:'api/destination-photo?id=7'})");
+  const html = v.node('#modal').innerHTML;
+  assert.match(html, /name="category" type="text"/);
+  assert.match(html, /name="photo_file" type="file"/);
+  assert.doesNotMatch(html, /<select[^>]*name="(?:category|image)"/);
+  assert.match(html, /src="api\/destination-photo\?id=7"/);
+  v.run(
+    "state.data={destinations:[{category:'Wildlife'},{category:'Wellness'},{category:'Wildlife'}]}",
+  );
+  assert.equal(v.run('destinationCategories().join(",")'), 'Wellness,Wildlife');
+});
