@@ -1,0 +1,303 @@
+{"kind":"deck","id":"pr/4it3r7","name":"Deck"}
+{"kind":"layout","layoutId":"23c41b1d-5484-4dc2-9402-c028d48f9230","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"3bfb9c94-8f83-4460-8612-a7afc3d86b41","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/d5qjwg","slide":1,"title":"ROAM.","textShapes":4}
+{"kind":"textbox","id":"sh/7y5gri18","slide":1,"text":"ROAM.","textPreview":"ROAM.","textChars":5,"textLines":1,"bbox":[64,82,540,142]}
+{"kind":"textbox","id":"sh/mxwzid0n","slide":1,"text":"Trip\nPlanner","textPreview":"Trip | Planner","textChars":12,"textLines":2,"bbox":[64,257,530,210]}
+{"kind":"textbox","id":"sh/lwnyp8j2","slide":1,"text":"A complete Java web project","textPreview":"A complete Java web project","textChars":27,"textLines":1,"bbox":[64,533,500,45]}
+{"kind":"textbox","id":"sh/kvehg3ih","slide":1,"text":"ACADEMIC PROJECT PRESENTATION","textPreview":"ACADEMIC PROJECT PRESENTATION","textChars":29,"textLines":1,"bbox":[64,642,510,25]}
+{"kind":"image","id":"im/5wrm9oby","slide":1,"name":"","alt":"Illustrative travel image bundled with Roam","bbox":[610,0,670,720]}
+{"kind":"notes","id":"nt/d5qjwg","slide":1,"text":"Introduce Roam as an academic web development project. The system serves travelers and administrators. Explain that package bookings and payments are demonstrations, while personal planning records persist in the database.\nSource: README.md. Photo: mountains.jpg, docs/ASSETS.md."}
+{"kind":"slide","id":"sl/p60kcj","slide":2,"title":"PROJECT OVERVIEW","textShapes":8}
+{"kind":"textbox","id":"sh/8ji5cvyh","slide":2,"text":"PROJECT OVERVIEW","textPreview":"PROJECT OVERVIEW","textChars":16,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/7i943qxw","slide":2,"text":"One place for the whole trip","textPreview":"One place for the whole trip","textChars":28,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/6hgnalgb","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/lg7m1gfq","slide":2,"text":"The problem","textPreview":"The problem","textChars":11,"textLines":1,"bbox":[64,222,420,55]}
+{"kind":"textbox","id":"sh/kfy58by5","slide":2,"text":"Destination ideas, schedules and expense notes can become difficult to manage separately.","textPreview":"Destination ideas, schedules and expense notes can become difficult to manage separately.","textChars":89,"textLines":1,"bbox":[64,295,440,180]}
+{"kind":"textbox","id":"sh/jep4zqx0","slide":2,"text":"The solution","textPreview":"The solution","textChars":12,"textLines":1,"bbox":[646,222,510,55]}
+{"kind":"textbox","id":"sh/ydgn6lgf","slide":2,"text":"A personal workspace that keeps each trip connected to its itinerary, budget, packing and memories.","textPreview":"A personal workspace that keeps each trip connected to its itinerary, budget, packing and memories.","textChars":99,"textLines":1,"bbox":[646,295,510,200]}
+{"kind":"textbox","id":"sh/5cb6dkfa","slide":2,"text":"Planning tools + database persistence + administrator control","textPreview":"Planning tools + database persistence + administrator control","textChars":61,"textLines":1,"bbox":[64,591,1115,52]}
+{"kind":"notes","id":"nt/p60kcj","slide":2,"text":"Describe the problem as the project motivation, rather than a measured research finding. The objective is to demonstrate a complete database-backed travel workflow.\nProject sources: docs/FEATURES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/uzt5ae","slide":3,"title":"PROJECT OVERVIEW","textShapes":10}
+{"kind":"textbox","id":"sh/cry1kjmx","slide":3,"text":"PROJECT OVERVIEW","textPreview":"PROJECT OVERVIEW","textChars":16,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/bqp0be5c","slide":3,"text":"Two roles. Separate workspaces.","textPreview":"Two roles. Separate workspaces.","textChars":31,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/apgji94r","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/lwrihone","slide":3,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,220,200,130]}
+{"kind":"textbox","id":"sh/kvi1ojmt","slide":3,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[673,220,200,130]}
+{"kind":"textbox","id":"sh/zu90fe58","slide":3,"text":"Traveler","textPreview":"Traveler","textChars":8,"textLines":1,"bbox":[64,368,490,48]}
+{"kind":"textbox","id":"sh/ytgjmt4n","slide":3,"text":"Discover destinations, create personal plans and request demo packages.","textPreview":"Discover destinations, create personal plans and request demo packages.","textChars":71,"textLines":1,"bbox":[64,427,490,135]}
+{"kind":"textbox","id":"sh/10ni54na","slide":3,"text":"Administrator","textPreview":"Administrator","textChars":13,"textLines":1,"bbox":[673,368,490,48]}
+{"kind":"textbox","id":"sh/0ze1cz6p","slide":3,"text":"Curate the catalog, maintain suppliers and manage bookings and access.","textPreview":"Curate the catalog, maintain suppliers and manage bookings and access.","textChars":70,"textLines":1,"bbox":[673,427,490,135]}
+{"kind":"textbox","id":"sh/6tk3210b","slide":3,"text":"Server-side permissions protect every role-specific action.","textPreview":"Server-side permissions protect every role-specific action.","textChars":59,"textLines":1,"bbox":[64,608,1120,45]}
+{"kind":"notes","id":"nt/uzt5ae","slide":3,"text":"After sign-in, travelers enter their personal dashboard. Administrators land in the Operations overview with separate navigation. Server-side permission checks enforce the distinction.\nProject sources: docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/rlqm0u","slide":4,"title":"FEATURE OVERVIEW","textShapes":11}
+{"kind":"textbox","id":"sh/7q1k36pw","slide":4,"text":"FEATURE OVERVIEW","textPreview":"FEATURE OVERVIEW","textChars":16,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/sra1cbqh","slide":4,"text":"The complete website","textPreview":"The complete website","textChars":20,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/tcj25g7m","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/udsje187","slide":4,"text":"Discover","textPreview":"Discover","textChars":8,"textLines":1,"bbox":[64,224,510,48]}
+{"kind":"textbox","id":"sh/felk76ps","slide":4,"text":"Dashboard, season browsing, destination search, matching and comparison","textPreview":"Dashboard, season browsing, destination search, matching and comparison","textChars":71,"textLines":1,"bbox":[64,283,510,135]}
+{"kind":"textbox","id":"sh/gfu1gbqd","slide":4,"text":"Plan","textPreview":"Plan","textChars":4,"textLines":1,"bbox":[660,224,510,48]}
+{"kind":"textbox","id":"sh/hg329g7y","slide":4,"text":"Trip creation, itinerary, group budget and packing checklist","textPreview":"Trip creation, itinerary, group budget and packing checklist","textChars":60,"textLines":1,"bbox":[660,283,510,135]}
+{"kind":"textbox","id":"sh/ah8j2h83","slide":4,"text":"Keep","textPreview":"Keep","textChars":4,"textLines":1,"bbox":[64,436,510,48]}
+{"kind":"textbox","id":"sh/bih0vm9o","slide":4,"text":"Wishlist, countdown, private memories and feedback","textPreview":"Wishlist, countdown, private memories and feedback","textChars":50,"textLines":1,"bbox":[64,495,510,135]}
+{"kind":"textbox","id":"sh/3ahovit8","slide":4,"text":"Manage","textPreview":"Manage","textChars":6,"textLines":1,"bbox":[660,436,510,48]}
+{"kind":"textbox","id":"sh/i98nmdsn","slide":4,"text":"Account/profile, logout, packages, bookings and administrator tools","textPreview":"Account/profile, logout, packages, bookings and administrator tools","textChars":67,"textLines":1,"bbox":[660,495,510,135]}
+{"kind":"notes","id":"nt/rlqm0u","slide":4,"text":"This is the coverage overview. The following slides explain every original traveler menu area, the package extension and the administration workspace.\nProject sources: docs/FEATURES.md; docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/ui5eon","slide":5,"title":"TRAVELER EXPERIENCE","textShapes":9}
+{"kind":"textbox","id":"sh/hojupg76","slide":5,"text":"TRAVELER EXPERIENCE","textPreview":"TRAVELER EXPERIENCE","textChars":19,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/ulsbe18f","slide":5,"text":"Your personal travel dashboard","textPreview":"Your personal travel dashboard","textChars":30,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/vm1cn6p0","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/tkjulw7a","slide":5,"text":"At a glance","textPreview":"At a glance","textChars":11,"textLines":1,"bbox":[64,218,330,48]}
+{"kind":"textbox","id":"sh/6h8ba18j","slide":5,"text":"Upcoming trip, quick actions and trip/expense totals.","textPreview":"Upcoming trip, quick actions and trip/expense totals.","textChars":53,"textLines":1,"bbox":[64,277,330,135]}
+{"kind":"textbox","id":"sh/7ihcj6p4","slide":5,"text":"Your account","textPreview":"Your account","textChars":12,"textLines":1,"bbox":[64,360,330,48]}
+{"kind":"textbox","id":"sh/sfudovqt","slide":5,"text":"Sign in, edit your profile and update your password.","textPreview":"Sign in, edit your profile and update your password.","textChars":52,"textLines":1,"bbox":[64,419,330,135]}
+{"kind":"textbox","id":"sh/dg3ux07e","slide":5,"text":"Your privacy","textPreview":"Your privacy","textChars":12,"textLines":1,"bbox":[64,502,330,48]}
+{"kind":"textbox","id":"sh/5wjyh83q","slide":5,"text":"Private records and confirmation before logout.","textPreview":"Private records and confirmation before logout.","textChars":47,"textLines":1,"bbox":[64,561,330,135]}
+{"kind":"image","id":"im/h4vi50b6","slide":5,"name":"","alt":"Actual Roam website with demonstration data","bbox":[450,205,766,438]}
+{"kind":"notes","id":"nt/ui5eon","slide":5,"text":"Registration depends on the administrator setting. Profile includes trip history and wishlist. Logout can be cancelled. Do not display real credentials during the classroom demonstration.\nProject sources: docs/FEATURES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/fxkjhd","slide":6,"title":"TRAVELER EXPERIENCE","textShapes":9}
+{"kind":"textbox","id":"sh/fm1gz2hs","slide":6,"text":"TRAVELER EXPERIENCE","textPreview":"TRAVELER EXPERIENCE","textChars":19,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/gnaxs7id","slide":6,"text":"Discover your next destination","textPreview":"Discover your next destination","textChars":30,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/hojy1czy","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/7ihwv2hw","slide":6,"text":"Search & filter","textPreview":"Search & filter","textChars":15,"textLines":1,"bbox":[64,218,330,48]}
+{"kind":"textbox","id":"sh/sjqxonih","slide":6,"text":"Browse by destination, trip type or season.","textPreview":"Browse by destination, trip type or season.","textChars":43,"textLines":1,"bbox":[64,277,330,135]}
+{"kind":"textbox","id":"sh/tkzexsz2","slide":6,"text":"Explore seasons","textPreview":"Explore seasons","textChars":15,"textLines":1,"bbox":[64,360,330,48]}
+{"kind":"textbox","id":"sh/itofid0f","slide":6,"text":"Summer, Monsoon, Autumn and Winter.","textPreview":"Summer, Monsoon, Autumn and Winter.","textChars":35,"textLines":1,"bbox":[64,419,330,135]}
+{"kind":"textbox","id":"sh/juhwrih0","slide":6,"text":"Review details","textPreview":"Review details","textChars":14,"textLines":1,"bbox":[64,502,330,48]}
+{"kind":"textbox","id":"sh/72t07e5g","slide":6,"text":"Costs, duration, activities and attractions.","textPreview":"Costs, duration, activities and attractions.","textChars":44,"textLines":1,"bbox":[64,561,330,135]}
+{"kind":"image","id":"im/3a5sny9s","slide":6,"name":"","alt":"Actual Roam website with demonstration data","bbox":[450,205,766,438]}
+{"kind":"notes","id":"nt/fxkjhd","slide":6,"text":"Season browsing covers Summer, Monsoon, Autumn and Winter. Each season has a distinct hover or keyboard-focus animation, respecting reduced-motion preferences. Season suitability is curated, and prices are sample estimates. Image is an illustrative bundled asset, not a destination guarantee.\nProject sources: docs/FEATURES.md; docs/ASSETS.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/5qz3fr","slide":7,"title":"RECOMMENDATION LOGIC","textShapes":7}
+{"kind":"textbox","id":"sh/1kjylobe","slide":7,"text":"RECOMMENDATION LOGIC","textPreview":"RECOMMENDATION LOGIC","textChars":20,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/ehsfatcn","slide":7,"text":"How trip matching works","textPreview":"How trip matching works","textChars":23,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/fi1gjyt8","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/o7uhg3a5","slide":7,"text":"100","textPreview":"100","textChars":3,"textLines":1,"bbox":[64,238,300,147]}
+{"kind":"textbox","id":"sh/p83yp8bq","slide":7,"text":"possible points","textPreview":"possible points","textChars":15,"textLines":1,"bbox":[70,379,310,49]}
+{"kind":"textbox","id":"sh/25cfetsz","slide":7,"text":"Top 3 destinations\nranked by a clear\nrule-based score.","textPreview":"Top 3 destinations | ranked by a clear | rule-based score.","textChars":54,"textLines":3,"bbox":[70,465,325,139]}
+{"kind":"textbox","id":"sh/kbqx4jul","slide":7,"text":"Per-person estimates exclude travel to the destination.","textPreview":"Per-person estimates exclude travel to the destination.","textChars":55,"textLines":1,"bbox":[449,639,743,35]}
+{"kind":"chart","id":"ch/jq98rix4","slide":7,"name":"","chartType":"bar","bbox":[448,210,760,410]}
+{"kind":"notes","id":"nt/5qz3fr","slide":7,"text":"This is a transparent rule-based algorithm, not a trained AI model. Cost equals daily destination estimate multiplied by the selected number of days, per person. Interests use case-insensitive activity-text matching. The maximum is 100 points. Estimates exclude travel to the destination.\nProject sources: src/main/webapp/assets/app.js, matching()\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/50i69t","slide":8,"title":"TRAVELER EXPERIENCE","textShapes":9}
+{"kind":"textbox","id":"sh/nudkz6h4","slide":8,"text":"TRAVELER EXPERIENCE","textPreview":"TRAVELER EXPERIENCE","textChars":19,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/8v618rip","slide":8,"text":"Compare choices. Save favorites.","textPreview":"Compare choices. Save favorites.","textChars":32,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/9gf21wza","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/yp4j2h0n","slide":8,"text":"2–3","textPreview":"2–3","textChars":3,"textLines":1,"bbox":[64,230,450,148]}
+{"kind":"textbox","id":"sh/zqdkvmh8","slide":8,"text":"Destinations side by side","textPreview":"Destinations side by side","textChars":25,"textLines":1,"bbox":[64,402,495,48]}
+{"kind":"textbox","id":"sh/0rm14rit","slide":8,"text":"Compare rates, season, duration, attractions and activities before choosing.","textPreview":"Compare rates, season, duration, attractions and activities before choosing.","textChars":76,"textLines":1,"bbox":[64,461,495,135]}
+{"kind":"textbox","id":"sh/lsv2xwzy","slide":8,"text":"Wishlist","textPreview":"Wishlist","textChars":8,"textLines":1,"bbox":[687,245,480,85]}
+{"kind":"textbox","id":"sh/ilo3el0r","slide":8,"text":"Save destinations privately.\nReopen details, remove a save\nor begin a trip anytime.","textPreview":"Save destinations privately. | Reopen details, remove a save | or begin a trip anytime.","textChars":83,"textLines":3,"bbox":[687,361,492,150]}
+{"kind":"textbox","id":"sh/jmhk7qhc","slide":8,"text":"Comparison lasts for the browser session. Wishlist saves persist.","textPreview":"Comparison lasts for the browser session. Wishlist saves persist.","textChars":65,"textLines":1,"bbox":[64,623,1125,38]}
+{"kind":"notes","id":"nt/50i69t","slide":8,"text":"Comparison selections last only for the browser session. Wishlist records persist in the database for the current account. These features support choosing a destination before committing to a plan.\nProject sources: docs/FEATURES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/ync6h9","slide":9,"title":"TRAVELER EXPERIENCE","textShapes":9}
+{"kind":"textbox","id":"sh/5wnixgn2","slide":9,"text":"TRAVELER EXPERIENCE","textPreview":"TRAVELER EXPERIENCE","textChars":19,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/itwz2lob","slide":9,"text":"Make the plan your own","textPreview":"Make the plan your own","textChars":22,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/ju50vq5w","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/hsnitgn6","slide":9,"text":"Trip essentials","textPreview":"Trip essentials","textChars":15,"textLines":1,"bbox":[64,218,330,48]}
+{"kind":"textbox","id":"sh/upczy1of","slide":9,"text":"Destination, dates, travelers and preferences.","textPreview":"Destination, dates, travelers and preferences.","textChars":46,"textLines":1,"bbox":[64,277,330,135]}
+{"kind":"textbox","id":"sh/vql0r650","slide":9,"text":"Flexible start","textPreview":"Flexible start","textChars":14,"textLines":1,"bbox":[64,360,330,48]}
+{"kind":"textbox","id":"sh/8nuhwb69","slide":9,"text":"Suggested activities or a blank itinerary.","textPreview":"Suggested activities or a blank itinerary.","textChars":42,"textLines":1,"bbox":[64,419,330,135]}
+{"kind":"textbox","id":"sh/9o3ypwnu","slide":9,"text":"Connected tools","textPreview":"Connected tools","textChars":15,"textLines":1,"bbox":[64,502,330,48]}
+{"kind":"textbox","id":"sh/5snuxcz2","slide":9,"text":"A group budget and an editable seasonal packing list.","textPreview":"A group budget and an editable seasonal packing list.","textChars":53,"textLines":1,"bbox":[64,561,330,135]}
+{"kind":"image","id":"im/18ra9cve","slide":9,"name":"","alt":"Actual Roam website with demonstration data","bbox":[450,205,766,438]}
+{"kind":"notes","id":"nt/ync6h9","slide":9,"text":"Explain a transaction: related records succeed together or roll back together if something fails. The generated lists are starting points that travelers can edit. Destination estimates are per person, while entered trip budgets are group totals.\nProject sources: docs/ARCHITECTURE.md; docs/FEATURES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/ggdmng","slide":10,"title":"TRAVELER EXPERIENCE","textShapes":9}
+{"kind":"textbox","id":"sh/8n69wret","slide":10,"text":"TRAVELER EXPERIENCE","textPreview":"TRAVELER EXPERIENCE","textChars":19,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/7mx83md8","slide":10,"text":"A day-by-day itinerary","textPreview":"A day-by-day itinerary","textChars":22,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/6loruhwn","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/grq90rep","slide":10,"text":"Edit each day","textPreview":"Edit each day","textChars":13,"textLines":1,"bbox":[64,218,330,48]}
+{"kind":"textbox","id":"sh/vqx87mdk","slide":10,"text":"Add activities, update details and remove entries.","textPreview":"Add activities, update details and remove entries.","textChars":50,"textLines":1,"bbox":[64,277,330,135]}
+{"kind":"textbox","id":"sh/uporyhwz","slide":10,"text":"Take it along","textPreview":"Take it along","textChars":13,"textLines":1,"bbox":[64,360,330,48]}
+{"kind":"textbox","id":"sh/5gzadgvm","slide":10,"text":"Print the schedule or save as PDF.","textPreview":"Print the schedule or save as PDF.","textChars":34,"textLines":1,"bbox":[64,419,330,135]}
+{"kind":"textbox","id":"sh/4fq94bu1","slide":10,"text":"Preserve history","textPreview":"Preserve history","textChars":16,"textLines":1,"bbox":[64,502,330,48]}
+{"kind":"textbox","id":"sh/exo7ux0b","slide":10,"text":"Cancel or complete a trip. Finished trips lock editing.","textPreview":"Cancel or complete a trip. Finished trips lock editing.","textChars":55,"textLines":1,"bbox":[64,561,330,135]}
+{"kind":"image","id":"im/0jilknql","slide":10,"name":"","alt":"Actual Roam website with demonstration data","bbox":[450,205,766,438]}
+{"kind":"notes","id":"nt/ggdmng","slide":10,"text":"Cancelled and completed trips become read-only. Shortening a trip is rejected if itinerary entries lie beyond the proposed final day. Changing destinations preserves manually edited itinerary and packing contents, so users should review them afterward. PDF output uses the browser print function.\nProject sources: docs/FEATURES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/dp6wt5","slide":11,"title":"BUDGET PLANNING","textShapes":8}
+{"kind":"textbox","id":"sh/axkv6lgr","slide":11,"text":"BUDGET PLANNING","textPreview":"BUDGET PLANNING","textChars":15,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/x0buhgfi","slide":11,"text":"A clear view of the group budget","textPreview":"A clear view of the group budget","textChars":32,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/wz2d8vyx","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/jmdcjqx8","slide":11,"text":"INR 20,000","textPreview":"INR 20,000","textChars":10,"textLines":1,"bbox":[64,222,465,80]}
+{"kind":"textbox","id":"sh/y1kvalgn","slide":11,"text":"Illustrative group budget","textPreview":"Illustrative group budget","textChars":25,"textLines":1,"bbox":[64,308,440,38]}
+{"kind":"textbox","id":"sh/lovul0fe","slide":11,"text":"INR 1,500 remaining","textPreview":"INR 1,500 remaining","textChars":19,"textLines":1,"bbox":[64,423,430,48]}
+{"kind":"textbox","id":"sh/knmdcvyt","slide":11,"text":"With INR 18,500 in estimates, the group can adjust spending before travel.","textPreview":"With INR 18,500 in estimates, the group can adjust spending before travel.","textChars":74,"textLines":1,"bbox":[64,482,430,135]}
+{"kind":"textbox","id":"sh/6p4ve5gz","slide":11,"text":"Add, edit and remove estimates. All entered amounts are group totals.","textPreview":"Add, edit and remove estimates. All entered amounts are group totals.","textChars":69,"textLines":1,"bbox":[64,642,1120,37]}
+{"kind":"table","id":"tb/m9wvm1g3","slide":11,"name":"","rows":6,"cols":2,"preview":"Expense category | Example INR","bbox":[577,214,630,395]}
+{"kind":"notes","id":"nt/dp6wt5","slide":11,"text":"Illustrative classroom example: a group budget of INR 20,000 with expenses totaling INR 18,500 leaves INR 1,500. This is an example, not a real quote. Server-side money calculations use decimal values.\nIllustrative amounts are presentation examples, not live quotes. Example sum: 18,500, budget 20,000, remaining 1,500. Source: docs/FEATURES.md."}
+{"kind":"slide","id":"sl/i3wfbl","slide":12,"title":"TRAVELER EXPERIENCE","textShapes":9}
+{"kind":"textbox","id":"sh/3yl0b6tc","slide":12,"text":"TRAVELER EXPERIENCE","textPreview":"TRAVELER EXPERIENCE","textChars":19,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/4zuhkbah","slide":12,"text":"Ready for departure","textPreview":"Ready for departure","textChars":19,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/503idgb2","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/r2l0fqt8","slide":12,"text":"Seasonal essentials","textPreview":"Seasonal essentials","textChars":19,"textLines":1,"bbox":[64,218,330,48]}
+{"kind":"textbox","id":"sh/cne1obat","slide":12,"text":"Clothes, documents, toiletries and electronics.","textPreview":"Clothes, documents, toiletries and electronics.","textChars":47,"textLines":1,"bbox":[64,277,330,135]}
+{"kind":"textbox","id":"sh/donihgbe","slide":12,"text":"Your checklist","textPreview":"Your checklist","textChars":14,"textLines":1,"bbox":[64,360,330,48]}
+{"kind":"textbox","id":"sh/65szahsj","slide":12,"text":"Add custom items and save checked progress.","textPreview":"Add custom items and save checked progress.","textChars":43,"textLines":1,"bbox":[64,419,330,135]}
+{"kind":"textbox","id":"sh/76103mt4","slide":12,"text":"Live countdown","textPreview":"Live countdown","textChars":14,"textLines":1,"bbox":[64,502,330,48]}
+{"kind":"textbox","id":"sh/3q103e9c","slide":12,"text":"Days, hours, minutes and seconds until the next eligible trip.","textPreview":"Days, hours, minutes and seconds until the next eligible trip.","textChars":62,"textLines":1,"bbox":[64,561,330,135]}
+{"kind":"image","id":"im/bu1gzatw","slide":12,"name":"","alt":"Actual Roam website with demonstration data","bbox":[450,205,766,438]}
+{"kind":"notes","id":"nt/i3wfbl","slide":12,"text":"Checked packing items persist in the database. The countdown follows local device dates and is a planning aid. It chooses the earliest eligible planned trip.\nProject sources: docs/FEATURES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/lind3i","slide":13,"title":"TRAVELER EXPERIENCE","textShapes":7}
+{"kind":"textbox","id":"sh/pkve9k7m","slide":13,"text":"TRAVELER EXPERIENCE","textPreview":"TRAVELER EXPERIENCE","textChars":19,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/2x4vy58v","slide":13,"text":"Keep the moments that matter","textPreview":"Keep the moments that matter","textChars":28,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/3idw7apg","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/1wve5k7a","slide":13,"text":"Private travel memories","textPreview":"Private travel memories","textChars":23,"textLines":1,"bbox":[64,235,657,48]}
+{"kind":"textbox","id":"sh/et4vu58z","slide":13,"text":"For completed trips: upload a photo with a title, trip date and personal note.","textPreview":"For completed trips: upload a photo with a title, trip date and personal note.","textChars":78,"textLines":1,"bbox":[64,294,657,135]}
+{"kind":"textbox","id":"sh/fudw3ap4","slide":13,"text":"Feedback with a response","textPreview":"Feedback with a response","textChars":24,"textLines":1,"bbox":[64,441,657,48]}
+{"kind":"textbox","id":"sh/0r6d8z69","slide":13,"text":"One 1–5 review per completed trip. Read the administrator’s reply in your account.","textPreview":"One 1–5 review per completed trip. Read the administrator’s reply in your account.","textChars":82,"textLines":1,"bbox":[64,500,657,135]}
+{"kind":"image","id":"im/ls7ytsvu","slide":13,"name":"","alt":"Illustrative travel image bundled with Roam","bbox":[804,204,412,438]}
+{"kind":"notes","id":"nt/lind3i","slide":13,"text":"Memory dates must fall within the trip. Travelers can delete their memories. Photo retrieval checks ownership, and uploads are decoded and re-encoded with metadata removed. Feedback prevents multiple reviews for the same trip.\nProject sources: docs/FEATURES.md; docs/ARCHITECTURE.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/s153pr","slide":14,"title":"TRAVEL PACKAGES","textShapes":9}
+{"kind":"textbox","id":"sh/oned8jel","slide":14,"text":"TRAVEL PACKAGES","textPreview":"TRAVEL PACKAGES","textChars":15,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/nm5wfed0","slide":14,"text":"What a travel package contains","textPreview":"What a travel package contains","textChars":30,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/mlwv69wf","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/1k3ed4vu","slide":14,"text":"Destination\n+ Hotel\n+ Transport","textPreview":"Destination | + Hotel | + Transport","textChars":31,"textLines":3,"bbox":[64,227,520,248]}
+{"kind":"textbox","id":"sh/0jud4ze9","slide":14,"text":"The complete offer","textPreview":"The complete offer","textChars":18,"textLines":1,"bbox":[665,238,490,48]}
+{"kind":"textbox","id":"sh/zilwbudo","slide":14,"text":"Per-person INR price, duration, traveler limit and daily itinerary.","textPreview":"Per-person INR price, duration, traveler limit and daily itinerary.","textChars":67,"textLines":1,"bbox":[665,297,490,135]}
+{"kind":"textbox","id":"sh/ehcv29w3","slide":14,"text":"The terms","textPreview":"The terms","textChars":9,"textLines":1,"bbox":[665,437,490,48]}
+{"kind":"textbox","id":"sh/lg7ep8vy","slide":14,"text":"Inclusions, exclusions and cancellation rules are visible before a demo request.","textPreview":"Inclusions, exclusions and cancellation rules are visible before a demo request.","textChars":80,"textLines":1,"bbox":[665,496,490,135]}
+{"kind":"textbox","id":"sh/kfyxg3et","slide":14,"text":"Clients see published packages with active destinations and suppliers.","textPreview":"Clients see published packages with active destinations and suppliers.","textChars":70,"textLines":1,"bbox":[64,624,1130,40]}
+{"kind":"notes","id":"nt/s153pr","slide":14,"text":"A package appears to clients only if it is published and its destination, hotel and transportation are active. Personal trip planning and package bookings are separate workflows.\nProject sources: docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/e8ir9u","slide":15,"title":"BOOKING WORKFLOW","textShapes":13}
+{"kind":"textbox","id":"sh/yt872xwz","slide":15,"text":"BOOKING WORKFLOW","textPreview":"BOOKING WORKFLOW","textChars":16,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/lwjqxcfq","slide":15,"text":"Bookings and payments are a demo","textPreview":"Bookings and payments are a demo","textChars":32,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/0vap47e5","slide":15,"text":"15","textPreview":"15","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/bqh8r2xo","slide":15,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,227,72,58]}
+{"kind":"textbox","id":"sh/qp87yxw3","slide":15,"text":"Request a booking","textPreview":"Request a booking","textChars":17,"textLines":1,"bbox":[159,227,1010,41]}
+{"kind":"textbox","id":"sh/dszqtsfe","slide":15,"text":"Choose package dates and traveler count.","textPreview":"Choose package dates and traveler count.","textChars":40,"textLines":1,"bbox":[159,270,1010,66]}
+{"kind":"textbox","id":"sh/crqp07e9","slide":15,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,339,72,58]}
+{"kind":"textbox","id":"sh/32h83ixc","slide":15,"text":"Follow its status","textPreview":"Follow its status","textChars":17,"textLines":1,"bbox":[159,339,1010,41]}
+{"kind":"textbox","id":"sh/21o7udwr","slide":15,"text":"My bookings shows requests and payment history.","textPreview":"My bookings shows requests and payment history.","textChars":47,"textLines":1,"bbox":[159,382,1010,66]}
+{"kind":"textbox","id":"sh/gbed076h","slide":15,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[64,451,72,58]}
+{"kind":"textbox","id":"sh/hcne9c72","slide":15,"text":"Record a simulated payment","textPreview":"Record a simulated payment","textChars":26,"textLines":1,"bbox":[159,451,1010,41]}
+{"kind":"textbox","id":"sh/u9wvyxob","slide":15,"text":"Receipts and refunds calculate unpaid, partial and paid states.","textPreview":"Receipts and refunds calculate unpaid, partial and paid states.","textChars":63,"textLines":1,"bbox":[159,494,1010,66]}
+{"kind":"textbox","id":"sh/va5w72pw","slide":15,"text":"No money moves. No hotel or transport reservation occurs.","textPreview":"No money moves. No hotel or transport reservation occurs.","textChars":57,"textLines":1,"bbox":[64,624,1150,44]}
+{"kind":"notes","id":"nt/e8ir9u","slide":15,"text":"Make the simulation boundary explicit when presenting. Simulate full payment records only a demonstration receipt. The server calculates totals, preserves booking snapshots and blocks excessive receipts or refunds. No payment gateway is connected.\nProject sources: docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/axtxoc","slide":16,"title":"ADMINISTRATOR WORKSPACE","textShapes":11}
+{"kind":"textbox","id":"sh/ji5s3i9k","slide":16,"text":"ADMINISTRATOR WORKSPACE","textPreview":"ADMINISTRATOR WORKSPACE","textChars":23,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/4je9wnq5","slide":16,"text":"The catalog behind each trip","textPreview":"The catalog behind each trip","textChars":28,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/5kna5srq","slide":16,"text":"16","textPreview":"16","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/6lwryx8v","slide":16,"text":"Destinations","textPreview":"Destinations","textChars":12,"textLines":1,"bbox":[64,230,520,48]}
+{"kind":"textbox","id":"sh/rm5s7i9g","slide":16,"text":"Edit region, description, season, category, cost, activities and imagery. Publish or hide.","textPreview":"Edit region, description, season, category, cost, activities and imagery. Publish or hide.","textChars":90,"textLines":1,"bbox":[64,289,520,135]}
+{"kind":"textbox","id":"sh/sny90nq1","slide":16,"text":"Hotels","textPreview":"Hotels","textChars":6,"textLines":1,"bbox":[666,230,500,48]}
+{"kind":"textbox","id":"sh/to7a9srm","slide":16,"text":"Maintain address, room details and amenities. Archive and restore supplier records.","textPreview":"Maintain address, room details and amenities. Archive and restore supplier records.","textChars":83,"textLines":1,"bbox":[666,289,500,135]}
+{"kind":"textbox","id":"sh/mpcrmt8r","slide":16,"text":"Transportation","textPreview":"Transportation","textChars":14,"textLines":1,"bbox":[64,447,520,48]}
+{"kind":"textbox","id":"sh/7ql8vy9c","slide":16,"text":"Maintain modes, routes and service details, including mixed journeys.","textPreview":"Maintain modes, routes and service details, including mixed journeys.","textChars":69,"textLines":1,"bbox":[64,506,520,135]}
+{"kind":"textbox","id":"sh/vudc3y94","slide":16,"text":"History stays connected","textPreview":"History stays connected","textChars":23,"textLines":1,"bbox":[666,447,500,48]}
+{"kind":"textbox","id":"sh/ut4but8z","slide":16,"text":"Hidden catalog entries retain links to previous trips and bookings.","textPreview":"Hidden catalog entries retain links to previous trips and bookings.","textChars":67,"textLines":1,"bbox":[666,506,500,135]}
+{"kind":"notes","id":"nt/axtxoc","slide":16,"text":"Historical trips retain destination references when entries are hidden. Published packages must first be unpublished before associated hotel or transport records can be archived. Administrators can represent a mixed transport journey.\nProject sources: docs/FEATURES.md; docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/p1ra9n","slide":17,"title":"ADMINISTRATOR WORKSPACE","textShapes":12}
+{"kind":"textbox","id":"sh/l4f298zq","slide":17,"text":"ADMINISTRATOR WORKSPACE","textPreview":"ADMINISTRATOR WORKSPACE","textChars":23,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/y1ojet0f","slide":17,"text":"Package operations","textPreview":"Package operations","textChars":18,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/z2x07yh0","slide":17,"text":"17","textPreview":"17","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/cfm1c3i9","slide":17,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,235,72,58]}
+{"kind":"textbox","id":"sh/x0vi58zu","slide":17,"text":"Build & publish","textPreview":"Build & publish","textChars":15,"textLines":1,"bbox":[159,235,1010,41]}
+{"kind":"textbox","id":"sh/ad4jat03","slide":17,"text":"Link suppliers, set pricing and terms, then save Draft or Published.","textPreview":"Link suppliers, set pricing and terms, then save Draft or Published.","textChars":68,"textLines":1,"bbox":[159,278,1010,66]}
+{"kind":"textbox","id":"sh/bed03yho","slide":17,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,347,72,58]}
+{"kind":"textbox","id":"sh/wbq1onit","slide":17,"text":"Manage requests","textPreview":"Manage requests","textChars":15,"textLines":1,"bbox":[159,347,1010,41]}
+{"kind":"textbox","id":"sh/hwz2hszy","slide":17,"text":"Confirm, cancel or complete eligible bookings.","textPreview":"Confirm, cancel or complete eligible bookings.","textChars":46,"textLines":1,"bbox":[159,390,1010,66]}
+{"kind":"textbox","id":"sh/d87m10be","slide":17,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[64,459,72,58]}
+{"kind":"textbox","id":"sh/c7ylsvut","slide":17,"text":"Keep an accurate ledger","textPreview":"Keep an accurate ledger","textChars":23,"textLines":1,"bbox":[159,459,1010,41]}
+{"kind":"textbox","id":"sh/b6p4zqt8","slide":17,"text":"Record demo receipts/refunds and preserve original booking details.","textPreview":"Record demo receipts/refunds and preserve original booking details.","textChars":67,"textLines":1,"bbox":[159,502,1010,66]}
+{"kind":"notes","id":"nt/p1ra9n","slide":17,"text":"Completion requires the booking end date to have passed. Deleting a package removes its catalog listing while preserving historical bookings. Frozen package and supplier details retain what the customer originally requested. Payment status comes from ledger amounts rather than an editable label.\nProject sources: docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/x92vit","slide":18,"title":"ADMINISTRATOR WORKSPACE","textShapes":11}
+{"kind":"textbox","id":"sh/8z65kbq1","slide":18,"text":"ADMINISTRATOR WORKSPACE","textPreview":"ADMINISTRATOR WORKSPACE","textChars":23,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/7ydor6pw","slide":18,"text":"Access, feedback and oversight","textPreview":"Access, feedback and oversight","textChars":30,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/md4ni18b","slide":18,"text":"18","textPreview":"18","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/lcv6pg7q","slide":18,"text":"User access","textPreview":"User access","textChars":11,"textLines":1,"bbox":[64,227,516,48]}
+{"kind":"textbox","id":"sh/kbm5gbq5","slide":18,"text":"Enable or disable travelers. Revoked access invalidates existing sessions.","textPreview":"Enable or disable travelers. Revoked access invalidates existing sessions.","textChars":74,"textLines":1,"bbox":[64,286,516,135]}
+{"kind":"textbox","id":"sh/zadon6pk","slide":18,"text":"Client experience","textPreview":"Client experience","textChars":17,"textLines":1,"bbox":[665,227,510,48]}
+{"kind":"textbox","id":"sh/y94ne18z","slide":18,"text":"Control registrations, the dashboard announcement and support email.","textPreview":"Control registrations, the dashboard announcement and support email.","textChars":68,"textLines":1,"bbox":[665,286,510,135]}
+{"kind":"textbox","id":"sh/x8v6lw7e","slide":18,"text":"Reviews","textPreview":"Reviews","textChars":7,"textLines":1,"bbox":[64,439,516,48]}
+{"kind":"textbox","id":"sh/c725crq9","slide":18,"text":"Read feedback and send a response visible to the traveler.","textPreview":"Read feedback and send a response visible to the traveler.","textChars":58,"textLines":1,"bbox":[64,498,516,135]}
+{"kind":"textbox","id":"sh/udcf2hk3","slide":18,"text":"Operations overview","textPreview":"Operations overview","textChars":19,"textLines":1,"bbox":[665,439,510,48]}
+{"kind":"textbox","id":"sh/velwv218","slide":18,"text":"Review user/trip totals, average ratings and recent administrator audit events.","textPreview":"Review user/trip totals, average ratings and recent administrator audit events.","textChars":79,"textLines":1,"bbox":[665,498,510,135]}
+{"kind":"notes","id":"nt/x92vit","slide":18,"text":"Disabling an account invalidates its sessions. Administrator accounts have safeguards against accidental lockout through client controls. User and feedback lists paginate, and role validation protects each admin API route.\nProject sources: docs/FEATURES.md; docs/ARCHITECTURE.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/5d0chq","slide":19,"title":"TECHNICAL IMPLEMENTATION","textShapes":3}
+{"kind":"textbox","id":"sh/j2l47u9o","slide":19,"text":"TECHNICAL IMPLEMENTATION","textPreview":"TECHNICAL IMPLEMENTATION","textChars":24,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/k3u50zqt","slide":19,"text":"The technology behind Roam","textPreview":"The technology behind Roam","textChars":26,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/543m9kre","slide":19,"text":"19","textPreview":"19","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"table","id":"tb/3e9sbydc","slide":19,"name":"","rows":6,"cols":3,"preview":"Layer | Technology | Purpose","bbox":[64,211,1152,421]}
+{"kind":"notes","id":"nt/5d0chq","slide":19,"text":"Explain the purpose of each layer. Bootstrap supports styling. JavaScript handles browser interactions and JSON requests. Servlets process requests. Services implement rules. JDBC accesses the relational database. The production WAR uses MySQL, while the default local launcher uses H2.\nProject sources: pom.xml; README.md; RUN_GUIDE.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/k91ovc","slide":20,"title":"APPLICATION ARCHITECTURE","textShapes":15}
+{"kind":"textbox","id":"sh/jalcj6l4","slide":20,"text":"APPLICATION ARCHITECTURE","textPreview":"APPLICATION ARCHITECTURE","textChars":24,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/kbudsbmp","slide":20,"text":"A request through the MVC layers","textPreview":"A request through the MVC layers","textChars":32,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/lcnulw3a","slide":20,"text":"20","textPreview":"20","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/6dwvu14f","slide":20,"text":"01  View","textPreview":"01  View","textChars":8,"textLines":1,"bbox":[64,215,260,50]}
+{"kind":"textbox","id":"sh/7e5cn6l0","slide":20,"text":"JSP + JavaScript","textPreview":"JSP + JavaScript","textChars":16,"textLines":1,"bbox":[355,215,820,43]}
+{"kind":"textbox","id":"sh/8zedwbml","slide":20,"text":"Displays pages and sends JSON","textPreview":"Displays pages and sends JSON","textChars":29,"textLines":1,"bbox":[355,257,820,40]}
+{"kind":"textbox","id":"sh/t0nepg36","slide":20,"text":"02  Controller","textPreview":"02  Controller","textChars":14,"textLines":1,"bbox":[64,318,260,50]}
+{"kind":"textbox","id":"sh/mhsbih4b","slide":20,"text":"PageController / ApiController","textPreview":"PageController / ApiController","textChars":30,"textLines":1,"bbox":[355,318,820,43]}
+{"kind":"textbox","id":"sh/ni1cbmlw","slide":20,"text":"Checks requests, sessions and roles","textPreview":"Checks requests, sessions and roles","textChars":35,"textLines":1,"bbox":[355,360,820,40]}
+{"kind":"textbox","id":"sh/7u1sradk","slide":20,"text":"03  Services","textPreview":"03  Services","textChars":12,"textLines":1,"bbox":[64,421,260,50]}
+{"kind":"textbox","id":"sh/6t8by5cz","slide":20,"text":"TripService / PackageService","textPreview":"TripService / PackageService","textChars":28,"textLines":1,"bbox":[355,421,820,43]}
+{"kind":"textbox","id":"sh/twjutkvq","slide":20,"text":"Enforces trip and booking rules","textPreview":"Enforces trip and booking rules","textChars":31,"textLines":1,"bbox":[355,463,820,40]}
+{"kind":"textbox","id":"sh/svat0fu5","slide":20,"text":"04  Database","textPreview":"04  Database","textChars":12,"textLines":1,"bbox":[64,524,260,50]}
+{"kind":"textbox","id":"sh/jqhsnqdo","slide":20,"text":"Database / DatabaseSession","textPreview":"Database / DatabaseSession","textChars":26,"textLines":1,"bbox":[355,524,820,43]}
+{"kind":"textbox","id":"sh/i58bu5c3","slide":20,"text":"Runs JDBC work and stores sessions","textPreview":"Runs JDBC work and stores sessions","textChars":34,"textLines":1,"bbox":[355,566,820,40]}
+{"kind":"notes","id":"nt/k91ovc","slide":20,"text":"Request journey: the browser sends a same-origin JSON request, ApiController checks session, role and CSRF, the service validates and performs database work, then JSON returns for the browser to render. MVC keeps display, request handling and business logic separate.\nProject sources: docs/ARCHITECTURE.md; docs/MAINTENANCE.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/tdurml","slide":21,"title":"DATA MODEL","textShapes":4}
+{"kind":"textbox","id":"sh/gr2lgjap","slide":21,"text":"DATA MODEL","textPreview":"DATA MODEL","textChars":10,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/fqtkne94","slide":21,"text":"How the database connects","textPreview":"How the database connects","textChars":25,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/e5kje9sj","slide":21,"text":"21","textPreview":"21","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/ovmlk3q1","slide":21,"text":"Supporting tables store settings, audit events, login attempts and sessions.","textPreview":"Supporting tables store settings, audit events, login attempts and sessions.","textChars":76,"textLines":1,"bbox":[64,645,1152,32]}
+{"kind":"table","id":"tb/o32pwvq9","slide":21,"name":"","rows":6,"cols":3,"preview":"Parent record | Connected records | Relationship","bbox":[64,211,1152,411]}
+{"kind":"notes","id":"nt/tdurml","slide":21,"text":"Additional infrastructure tables hold settings, audit events, login attempts, schema versions and web sessions. Relational links support ownership checks and durable history. Memory and feedback operations depend on completed trips.\nProject sources: docs/ARCHITECTURE.md; src/main/resources/schema.sql; src/main/resources/packages.sql\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/bzf332","slide":22,"title":"SECURITY & VALIDATION","textShapes":11}
+{"kind":"textbox","id":"sh/g3qpwba1","slide":22,"text":"SECURITY & VALIDATION","textPreview":"SECURITY & VALIDATION","textChars":21,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/f2h8369w","slide":22,"text":"Protection at every layer","textPreview":"Protection at every layer","textChars":25,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/e187u1sb","slide":22,"text":"22","textPreview":"22","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/t0z61wrq","slide":22,"text":"Identity","textPreview":"Identity","textChars":8,"textLines":1,"bbox":[64,225,510,48]}
+{"kind":"textbox","id":"sh/szqpsba5","slide":22,"text":"Salted PBKDF2 passwords, timed sessions and current account checks.","textPreview":"Salted PBKDF2 passwords, timed sessions and current account checks.","textChars":67,"textLines":1,"bbox":[64,284,510,135]}
+{"kind":"textbox","id":"sh/ryxoz69k","slide":22,"text":"Private records","textPreview":"Private records","textChars":15,"textLines":1,"bbox":[665,225,510,48]}
+{"kind":"textbox","id":"sh/6do7q1sz","slide":22,"text":"Ownership checks restrict trips, photos and bookings to their users.","textPreview":"Ownership checks restrict trips, photos and bookings to their users.","textChars":68,"textLines":1,"bbox":[665,284,510,135]}
+{"kind":"textbox","id":"sh/dwjqx0ru","slide":22,"text":"Safe requests","textPreview":"Safe requests","textChars":13,"textLines":1,"bbox":[64,440,510,48]}
+{"kind":"textbox","id":"sh/cvap4va9","slide":22,"text":"CSRF tokens, prepared SQL, escaped HTML and rate limits.","textPreview":"CSRF tokens, prepared SQL, escaped HTML and rate limits.","textChars":56,"textLines":1,"bbox":[64,499,510,135]}
+{"kind":"textbox","id":"sh/elsvqlkj","slide":22,"text":"Controlled uploads","textPreview":"Controlled uploads","textChars":18,"textLines":1,"bbox":[665,440,510,48]}
+{"kind":"textbox","id":"sh/fm1czqlo","slide":22,"text":"Validate image size, normalize photos and remove metadata.","textPreview":"Validate image size, normalize photos and remove metadata.","textChars":58,"textLines":1,"bbox":[665,499,510,135]}
+{"kind":"notes","id":"nt/bzf332","slide":22,"text":"Passwords use PBKDF2-HMAC-SHA256 with 600,000 iterations and unique salts. Session IDs rotate after login. Cookies use HttpOnly and SameSite, with Secure under HTTPS deployment. Session expiry is 30 minutes. HTML escaping and a Content Security Policy also protect rendering. These controls reduce risk but do not imply security certification.\nProject sources: docs/ARCHITECTURE.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/tqmfzz","slide":23,"title":"VERIFICATION","textShapes":11}
+{"kind":"textbox","id":"sh/ydwv2lo7","slide":23,"text":"VERIFICATION","textPreview":"VERIFICATION","textChars":12,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/lg7ex07i","slide":23,"text":"Evidence from project testing","textPreview":"Evidence from project testing","textChars":29,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/0fed4v6x","slide":23,"text":"23","textPreview":"23","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/ba5cr6pg","slide":23,"text":"19","textPreview":"19","textChars":2,"textLines":1,"bbox":[64,222,350,153]}
+{"kind":"textbox","id":"sh/q9wvy1ov","slide":23,"text":"H2 integration tests","textPreview":"H2 integration tests","textChars":20,"textLines":1,"bbox":[64,382,350,65]}
+{"kind":"textbox","id":"sh/dcnutg7m","slide":23,"text":"19","textPreview":"19","textChars":2,"textLines":1,"bbox":[471,222,350,153]}
+{"kind":"textbox","id":"sh/cbed0b61","slide":23,"text":"MySQL integration tests","textPreview":"MySQL integration tests","textChars":23,"textLines":1,"bbox":[471,382,350,65]}
+{"kind":"textbox","id":"sh/36lcn6p4","slide":23,"text":"8","textPreview":"8","textChars":1,"textLines":1,"bbox":[878,222,350,153]}
+{"kind":"textbox","id":"sh/2lcvu1oz","slide":23,"text":"JavaScript regressions","textPreview":"JavaScript regressions","textChars":22,"textLines":1,"bbox":[878,382,350,65]}
+{"kind":"textbox","id":"sh/wnqpkrit","slide":23,"text":"12 users   /   108 local requests   /   0 failures","textPreview":"12 users   /   108 local requests   /   0 failures","textChars":50,"textLines":1,"bbox":[64,527,1152,64]}
+{"kind":"textbox","id":"sh/x8z6tcje","slide":23,"text":"Recorded repository results cover trip, security and package workflows.","textPreview":"Recorded repository results cover trip, security and package workflows.","textChars":71,"textLines":1,"bbox":[64,618,1152,40]}
+{"kind":"notes","id":"nt/tqmfzz","slide":23,"text":"These are recorded results from the repository maintenance verification, not tests rerun for this presentation. Package tests cover draft visibility, stale versions, party limits, duplicate requests, ownership, frozen booking data, partial/full/refunded amounts and history preservation. Local results do not establish hosted performance.\nProject sources: docs/MAINTENANCE.md; docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/hm1xje","slide":24,"title":"PRESENTATION WALKTHROUGH","textShapes":13}
+{"kind":"textbox","id":"sh/nidk3mtw","slide":24,"text":"PRESENTATION WALKTHROUGH","textPreview":"PRESENTATION WALKTHROUGH","textChars":24,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/o3m1crah","slide":24,"text":"The classroom demo","textPreview":"The classroom demo","textChars":18,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/94v25wb2","slide":24,"text":"24","textPreview":"24","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/edkj6xsf","slide":24,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,224,72,58]}
+{"kind":"textbox","id":"sh/zetkz2tk","slide":24,"text":"Open the traveler workspace","textPreview":"Open the traveler workspace","textChars":27,"textLines":1,"bbox":[159,224,1010,41]}
+{"kind":"textbox","id":"sh/0f2187a5","slide":24,"text":"Start the server, sign in and explore a destination.","textPreview":"Start the server, sign in and explore a destination.","textChars":52,"textLines":1,"bbox":[159,267,1010,66]}
+{"kind":"textbox","id":"sh/1gv21cbq","slide":24,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,336,72,58]}
+{"kind":"textbox","id":"sh/q9kj2xs3","slide":24,"text":"Build a trip live","textPreview":"Build a trip live","textChars":17,"textLines":1,"bbox":[159,336,1010,41]}
+{"kind":"textbox","id":"sh/rat0v2to","slide":24,"text":"Show itinerary changes, group budget and packing progress.","textPreview":"Show itinerary changes, group budget and packing progress.","textChars":58,"textLines":1,"bbox":[159,379,1010,66]}
+{"kind":"textbox","id":"sh/vu9ofa1s","slide":24,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[64,448,72,58]}
+{"kind":"textbox","id":"sh/at0n65k7","slide":24,"text":"Switch to administration","textPreview":"Switch to administration","textChars":24,"textLines":1,"bbox":[159,448,1010,41]}
+{"kind":"textbox","id":"sh/xgr6hkjy","slide":24,"text":"Explain package requests, simulated payments and catalog controls.","textPreview":"Explain package requests, simulated payments and catalog controls.","textChars":66,"textLines":1,"bbox":[159,491,1010,66]}
+{"kind":"textbox","id":"sh/wfi58fid","slide":24,"text":"Local address: http://127.0.0.1:8080","textPreview":"Local address: http://127.0.0.1:8080","textChars":36,"textLines":1,"bbox":[64,637,1120,37]}
+{"kind":"notes","id":"nt/hm1xje","slide":24,"text":"Run start-local.cmd, then open http://127.0.0.1:8080 while the server is running. Prepare separate demo traveler and administrator accounts beforehand. Use a completed sample trip to demonstrate memories and feedback. Avoid changing real user records during the demonstration.\nProject sources: RUN_GUIDE.md; docs/PACKAGES.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/c9yitl","slide":25,"title":"PROJECT SCOPE","textShapes":9}
+{"kind":"textbox","id":"sh/s7yd8bml","slide":25,"text":"PROJECT SCOPE","textPreview":"PROJECT SCOPE","textChars":13,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"textbox","id":"sh/r6pwf6l0","slide":25,"text":"What works now. What comes next.","textPreview":"What works now. What comes next.","textChars":32,"textLines":1,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/q5gv614f","slide":25,"text":"25","textPreview":"25","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/1crelg32","slide":25,"text":"Implemented","textPreview":"Implemented","textChars":11,"textLines":1,"bbox":[64,240,505,48]}
+{"kind":"textbox","id":"sh/0bidcb2h","slide":25,"text":"Personal planning with database storage, role-based administration and demo package bookings.","textPreview":"Personal planning with database storage, role-based administration and demo package bookings.","textChars":93,"textLines":1,"bbox":[64,299,505,135]}
+{"kind":"textbox","id":"sh/zapwj6lw","slide":25,"text":"Future development","textPreview":"Future development","textChars":18,"textLines":1,"bbox":[665,240,510,48]}
+{"kind":"textbox","id":"sh/e9gva1kb","slide":25,"text":"Real reservations and verified payments, live prices/weather and email notifications.","textPreview":"Real reservations and verified payments, live prices/weather and email notifications.","textChars":85,"textLines":1,"bbox":[665,299,510,135]}
+{"kind":"textbox","id":"sh/90repg3y","slide":25,"text":"Before real deployment","textPreview":"Before real deployment","textChars":22,"textLines":1,"bbox":[64,503,1115,49]}
+{"kind":"textbox","id":"sh/ozidgv2t","slide":25,"text":"Hosted performance checks, accessibility review and provider integration.","textPreview":"Hosted performance checks, accessibility review and provider integration.","textChars":73,"textLines":1,"bbox":[64,565,1120,75]}
+{"kind":"notes","id":"nt/c9yitl","slide":25,"text":"Destination estimates and season suitability are sample/curated content. No live travel provider, real payment gateway or email delivery currently works. Real payments would require signed provider webhooks, transaction identifiers and server-side reconciliation. Hosting configuration does not itself prove a production deployment. Future items are proposals.\nProject sources: docs/PACKAGES.md; docs/FEATURES.md; docs/VALIDATION.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
+{"kind":"slide","id":"sl/sob78b","slide":26,"title":"ROAM TRIP PLANNER","textShapes":4}
+{"kind":"textbox","id":"sh/fydobi98","slide":26,"text":"ROAM TRIP PLANNER","textPreview":"ROAM TRIP PLANNER","textChars":17,"textLines":1,"bbox":[64,34,1060,24]}
+{"kind":"shape","id":"sh/0z654nat","slide":26,"bbox":[64,83,1152,115]}
+{"kind":"textbox","id":"sh/10f6dsre","slide":26,"text":"26","textPreview":"26","textChars":2,"textLines":1,"bbox":[1170,675,48,22]}
+{"kind":"textbox","id":"sh/nmxof294","slide":26,"text":"Thank\nyou.","textPreview":"Thank | you.","textChars":10,"textLines":2,"bbox":[64,192,640,260]}
+{"kind":"textbox","id":"sh/on6587ap","slide":26,"text":"Questions & live demonstration","textPreview":"Questions & live demonstration","textChars":30,"textLines":1,"bbox":[64,548,650,75]}
+{"kind":"image","id":"im/rql4vi9w","slide":26,"name":"","alt":"Illustrative travel image bundled with Roam","bbox":[755,0,525,720]}
+{"kind":"notes","id":"nt/sob78b","slide":26,"text":"Closing talking points: Roam demonstrates a complete Java MVC application with relational persistence, two roles, editable planning records and transactional workflows. Be ready to explain rule-based recommendations, group budgets versus per-person prices, booking snapshots and simulated payments.\nProject sources: README.md\nWebsite screenshots show demonstration data. Bundled photograph provenance: docs/ASSETS.md."}
