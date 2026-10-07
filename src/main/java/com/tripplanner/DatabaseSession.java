@@ -9,15 +9,15 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HexFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Shared sessions survive container replacement. Only token digests are stored. */
+// DatabaseSession manages user sessions stored in the MySQL/H2 database
 final class DatabaseSession {
 
-    private static final long IDLE_MILLIS = 30 * 60 * 1000L;
+    private static final long IDLE_MILLIS = 30 * 60 * 1000L; // 30 minutes
     private static final String COOKIE = "ROAMSESSION";
     private final Connection connection;
     private final HttpServletRequest request;
@@ -39,6 +39,7 @@ final class DatabaseSession {
         this.values = values;
     }
 
+    // Loads an existing session from cookie or creates a new one
     static DatabaseSession load(
         Connection connection,
         HttpServletRequest request,
@@ -46,104 +47,159 @@ final class DatabaseSession {
     ) throws SQLException {
         long now = System.currentTimeMillis();
         String token = null;
-        if (request.getCookies() != null) for (Cookie cookie : request.getCookies())
-            if (COOKIE.equals(cookie.getName())) token = cookie.getValue();
-        if (ThreadLocalRandom.current().nextInt(100) == 0) execute(
-            connection,
-            "DELETE FROM web_sessions WHERE expires_at<? LIMIT 500",
-            now
-        );
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (int i = 0; i < cookies.length; i++) {
+                Cookie cookie = cookies[i];
+                if (COOKIE.equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // Random cleanup of expired sessions
+        if (ThreadLocalRandom.current().nextInt(100) == 0) {
+            execute(
+                connection,
+                "DELETE FROM web_sessions WHERE expires_at<? LIMIT 500",
+                now
+            );
+        }
+
+        // Validate token format and check if session exists in DB
         if (token != null && token.matches("[A-Za-z0-9_-]{43}")) {
-            String key = digest(token);
+            String sessionKey = digest(token);
             List<Map<String, Object>> rows = query(
                 connection,
                 "SELECT uid,auth_version,csrf FROM web_sessions WHERE session_key=? AND expires_at>?",
-                key,
+                sessionKey,
                 now
             );
-            if (
-                !rows.isEmpty() &&
-                execute(
+
+            if (!rows.isEmpty()) {
+                int updated = execute(
                     connection,
                     "UPDATE web_sessions SET expires_at=? WHERE session_key=? AND expires_at>?",
                     now + IDLE_MILLIS,
-                    key,
+                    sessionKey,
                     now
-                ) == 1
-            ) return new DatabaseSession(connection, request, response, key, rows.get(0));
+                );
+                if (updated == 1) {
+                    return new DatabaseSession(connection, request, response, sessionKey, rows.get(0));
+                }
+            }
         }
-        String fresh = Security.token(),
-            key = digest(fresh),
-            csrf = Security.token();
+
+        // Create a new session if not found or expired
+        String freshToken = Security.token();
+        String sessionKey = digest(freshToken);
+        String csrfToken = Security.token();
+
         execute(
             connection,
             "INSERT INTO web_sessions(session_key,csrf,expires_at) VALUES (?,?,?)",
-            key,
-            csrf,
+            sessionKey,
+            csrfToken,
             now + IDLE_MILLIS
         );
+
+        Map<String, Object> sessionValues = new HashMap<>();
+        sessionValues.put("csrf", csrfToken);
+
         DatabaseSession session = new DatabaseSession(
             connection,
             request,
             response,
-            key,
-            Map.of("csrf", csrf)
+            sessionKey,
+            sessionValues
         );
-        session.cookie(fresh, false);
+        session.cookie(freshToken, false);
         return session;
     }
 
+    // Retrieves a session attribute by name
     Object getAttribute(String name) {
-        return values.get(name.equals("version") ? "auth_version" : name);
+        String lookupKey = name;
+        if ("version".equals(name)) {
+            lookupKey = "auth_version";
+        }
+        return values.get(lookupKey);
     }
 
-    void authenticate(long user, int version) throws SQLException {
-        String fresh = Security.token(),
-            newKey = digest(fresh),
-            csrf = Security.token();
+    // Authenticates user and rotates session token
+    void authenticate(long userId, int version) throws SQLException {
+        String freshToken = Security.token();
+        String newKey = digest(freshToken);
+        String csrfToken = Security.token();
         long now = System.currentTimeMillis();
-        // One atomic update rotates the ID and authentication state together.
-        if (
-            execute(
-                connection,
-                "UPDATE web_sessions SET session_key=?,uid=?,auth_version=?,csrf=?,expires_at=? WHERE session_key=? AND expires_at>?",
-                newKey,
-                user,
-                version,
-                csrf,
-                now + IDLE_MILLIS,
-                key,
-                now
-            ) != 1
-        ) throw new IllegalArgumentException("Your session changed. Refresh and sign in again.");
+
+        int updated = execute(
+            connection,
+            "UPDATE web_sessions SET session_key=?,uid=?,auth_version=?,csrf=?,expires_at=? WHERE session_key=? AND expires_at>?",
+            newKey,
+            userId,
+            version,
+            csrfToken,
+            now + IDLE_MILLIS,
+            key,
+            now
+        );
+
+        if (updated != 1) {
+            throw new IllegalArgumentException("Your session changed. Refresh and sign in again.");
+        }
+
         key = newKey;
-        values = Map.of("uid", user, "auth_version", version, "csrf", csrf);
-        cookie(fresh, false);
+        Map<String, Object> newValues = new HashMap<>();
+        newValues.put("uid", userId);
+        newValues.put("auth_version", version);
+        newValues.put("csrf", csrfToken);
+        values = newValues;
+
+        cookie(freshToken, false);
     }
 
+    // Invalidates and removes current session
     void invalidate() throws SQLException {
         execute(connection, "DELETE FROM web_sessions WHERE session_key=?", key);
-        values = Map.of();
+        values = new HashMap<>();
         cookie("", true);
     }
 
+    // Sets session cookie on response
     private void cookie(String token, boolean expired) {
         Cookie cookie = new Cookie(COOKIE, token);
-        cookie.setPath(request.getContextPath().isEmpty() ? "/" : request.getContextPath());
+        String contextPath = request.getContextPath();
+        if (contextPath == null || contextPath.isEmpty()) {
+            cookie.setPath("/");
+        } else {
+            cookie.setPath(contextPath);
+        }
         cookie.setHttpOnly(true);
         cookie.setSecure(request.isSecure() || Boolean.parseBoolean(env("APP_HTTPS", "false")));
         cookie.setAttribute("SameSite", "Lax");
-        if (expired) cookie.setMaxAge(0);
+        if (expired) {
+            cookie.setMaxAge(0);
+        }
         response.addCookie(cookie);
     }
 
+    // Generates SHA-256 hex digest for token
     static String digest(String token) {
         try {
-            return HexFormat.of().formatHex(
-                MessageDigest.getInstance("SHA-256").digest(
-                    token.getBytes(StandardCharsets.US_ASCII)
-                )
-            );
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = md.digest(token.getBytes(StandardCharsets.US_ASCII));
+            StringBuilder hexString = new StringBuilder();
+            for (int i = 0; i < hashBytes.length; i++) {
+                String hex = Integer.toHexString(0xff & hashBytes[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

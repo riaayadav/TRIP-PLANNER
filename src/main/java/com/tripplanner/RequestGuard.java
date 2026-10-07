@@ -3,12 +3,31 @@ package com.tripplanner;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Bounded per-instance abuse protection; deploy edge limits for multi-instance systems. */
+// RequestGuard filters incoming requests to prevent rate-limit abuse
 public final class RequestGuard implements Filter {
 
-    private record Bucket(long started, int requests) {}
+    // Simple helper class to store request count and timestamp
+    private static class Bucket {
+        private final long started;
+        private final int requests;
+
+        public Bucket(long started, int requests) {
+            this.started = started;
+            this.requests = requests;
+        }
+
+        public long getStarted() {
+            return started;
+        }
+
+        public int getRequests() {
+            return requests;
+        }
+    }
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
 
@@ -16,32 +35,73 @@ public final class RequestGuard implements Filter {
         throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
+
         String path = req.getRequestURI();
-        boolean auth = path.endsWith("/login") || path.endsWith("/register");
-        boolean write = req.getMethod().equals("POST");
-        long window = auth ? 900000 : 60000;
-        int max = auth ? 50 : write ? 120 : 300;
-        String key = req.getRemoteAddr() + ":" + (auth ? "auth" : write ? "write" : "read");
+        boolean isAuth = path.endsWith("/login") || path.endsWith("/register");
+        boolean isWrite = req.getMethod().equals("POST");
+
+        long window;
+        if (isAuth) {
+            window = 900000; // 15 minutes
+        } else {
+            window = 60000;  // 1 minute
+        }
+
+        int maxRequests;
+        if (isAuth) {
+            maxRequests = 50;
+        } else if (isWrite) {
+            maxRequests = 120;
+        } else {
+            maxRequests = 300;
+        }
+
+        String actionType = "read";
+        if (isAuth) {
+            actionType = "auth";
+        } else if (isWrite) {
+            actionType = "write";
+        }
+
+        String key = req.getRemoteAddr() + ":" + actionType;
         long now = System.currentTimeMillis();
-        if (buckets.size() > 10000) buckets
-            .entrySet()
-            .removeIf(e -> now - e.getValue().started() > 900000);
+
+        // Clean old entries if map gets too large
+        if (buckets.size() > 10000) {
+            Iterator<Map.Entry<String, Bucket>> iterator = buckets.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, Bucket> entry = iterator.next();
+                if (now - entry.getValue().getStarted() > 900000) {
+                    iterator.remove();
+                }
+            }
+        }
+
         if (buckets.size() > 20000 && !buckets.containsKey(key)) {
             reject(res);
             return;
         }
-        Bucket current = buckets.compute(key, (k, b) ->
-            b == null || now - b.started() > window
-                ? new Bucket(now, 1)
-                : new Bucket(b.started(), b.requests() + 1)
-        );
-        if (current.requests() > max) {
+
+        Bucket current;
+        synchronized (buckets) {
+            Bucket existing = buckets.get(key);
+            if (existing == null || (now - existing.getStarted()) > window) {
+                current = new Bucket(now, 1);
+            } else {
+                current = new Bucket(existing.getStarted(), existing.getRequests() + 1);
+            }
+            buckets.put(key, current);
+        }
+
+        if (current.getRequests() > maxRequests) {
             reject(res);
             return;
         }
+
         chain.doFilter(request, response);
     }
 
+    // Sends HTTP 429 Too Many Requests response
     private void reject(HttpServletResponse res) throws IOException {
         res.setStatus(429);
         res.setContentType("application/json");
