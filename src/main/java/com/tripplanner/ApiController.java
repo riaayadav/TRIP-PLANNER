@@ -18,21 +18,37 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
-// ApiController is the main servlet that handles all REST API requests from the frontend
+/**
+ * ApiController is the central REST API Servlet that connects the frontend with the backend.
+ * 
+ * Key Responsibilities:
+ * 1. Request Dispatching: Routes all /api/* requests to their respective handlers.
+ * 2. Security Validation: Verifies CSRF tokens, session integrity, and user roles (CLIENT vs ADMIN).
+ * 3. JSON Serialization: Uses Jackson ObjectMapper to parse incoming requests and write JSON responses.
+ * 4. Image Processing: Normalizes, strips metadata, and resizes uploaded photos safely in memory.
+ * 5. Transaction Safety: Wraps multi-step database mutations inside database transactions with rollback on failure.
+ */
 public final class ApiController extends HttpServlet {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String DUMMY_PASSWORD_HASH = Security.hash("dummy-password-for-timing-only");
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
-    // Helper to get the Database singleton from ServletContext
+    /**
+     * Helper to retrieve the shared Database instance stored in ServletContext by AppListener.
+     */
     private Database getDatabase() {
         return (Database) getServletContext().getAttribute("db");
     }
 
+    // =========================================================================
+    // 1. SERVLET SETUP & CORE DISPATCHER
+    // =========================================================================
+
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
+        // Step 1: Set character encoding and standard HTTP security headers
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
@@ -41,19 +57,21 @@ public final class ApiController extends HttpServlet {
         response.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
 
         String method = request.getMethod();
-        String path = "";
-        if (request.getPathInfo() != null) {
-            path = request.getPathInfo();
-        }
+        String path = request.getPathInfo() != null ? request.getPathInfo() : "";
 
-        // Only GET and POST methods are permitted
+        // Only GET and POST HTTP methods are permitted
         if (!"GET".equals(method) && !"POST".equals(method)) {
             error(response, 405, "Method not allowed.");
             return;
         }
 
         try (Connection connection = getDatabase().connection()) {
-            // Health check endpoint
+
+            // =================================================================
+            // 2. UNRESTRICTED PUBLIC ENDPOINTS (Health, Session, Photos)
+            // =================================================================
+
+            // Endpoint: GET /api/health -> Server health check
             if (path.equals("/health") && method.equals("GET")) {
                 query(connection, "SELECT 1");
                 Map<String, Object> healthMap = new HashMap<>();
@@ -62,10 +80,11 @@ public final class ApiController extends HttpServlet {
                 return;
             }
 
+            // Load or create the user's database-backed session
             DatabaseSession session = DatabaseSession.load(connection, request, response);
             Map<String, Object> user = null;
 
-            // Check if user is logged in
+            // Check if user is currently signed in
             Object sessionUid = session.getAttribute("uid");
             if (sessionUid instanceof Number) {
                 long loggedInUserId = ((Number) sessionUid).longValue();
@@ -74,6 +93,7 @@ public final class ApiController extends HttpServlet {
                     "SELECT id,name,email,role,auth_version FROM users WHERE id=? AND active=TRUE",
                     loggedInUserId
                 );
+                // Validate that the user's password/auth_version has not been revoked
                 if (!userRows.isEmpty() && Objects.equals(userRows.get(0).get("auth_version"), session.getAttribute("version"))) {
                     user = userRows.get(0);
                 } else {
@@ -83,7 +103,7 @@ public final class ApiController extends HttpServlet {
                 }
             }
 
-            // Public image endpoint for package photos
+            // Endpoint: GET /api/package-photo?id={id} -> Public package cover photo
             if (path.equals("/package-photo") && method.equals("GET")) {
                 long photoPackageId = parseId(request.getParameter("id"));
                 List<Map<String, Object>> rows = query(
@@ -110,7 +130,7 @@ public final class ApiController extends HttpServlet {
                 return;
             }
 
-            // Session info endpoint
+            // Endpoint: GET /api/session -> Session state, current user, and platform settings
             if (path.equals("/session") && method.equals("GET")) {
                 Map<String, Object> sessionInfo = new LinkedHashMap<>();
                 sessionInfo.put("csrf", session.getAttribute("csrf"));
@@ -120,10 +140,14 @@ public final class ApiController extends HttpServlet {
                 return;
             }
 
+            // =================================================================
+            // 3. AUTHENTICATION ENDPOINTS (Login, Register, Logout)
+            // =================================================================
+
             Map<String, Object> body = new LinkedHashMap<>();
 
-            // Parse and validate POST requests
             if (method.equals("POST")) {
+                // CSRF Protection: Validate that X-CSRF-Token matches the session CSRF token
                 Object sessionCsrf = session.getAttribute("csrf");
                 String headerCsrf = request.getHeader("X-CSRF-Token");
                 if (!Objects.equals(sessionCsrf, headerCsrf)) {
@@ -131,12 +155,14 @@ public final class ApiController extends HttpServlet {
                     return;
                 }
 
+                // Verify request content type is application/json
                 String contentType = request.getContentType();
                 if (contentType == null || !contentType.startsWith("application/json")) {
                     error(response, 415, "JSON content is required.");
                     return;
                 }
 
+                // Prevent Denial-of-Service via oversized uploads (max 4.4 MB)
                 byte[] requestBytes = request.getInputStream().readNBytes(4400001);
                 if (requestBytes.length > 4400000) {
                     error(response, 413, "Upload is too large.");
@@ -153,11 +179,13 @@ public final class ApiController extends HttpServlet {
                     throw new IllegalArgumentException("A JSON object is required.");
                 }
 
+                // Endpoint: POST /api/login and POST /api/register
                 if (path.equals("/login") || path.equals("/register")) {
                     authenticate(connection, session, response, body, path);
                     return;
                 }
 
+                // Endpoint: POST /api/logout
                 if (path.equals("/logout")) {
                     session.invalidate();
                     Map<String, Object> okResponse = new HashMap<>();
@@ -167,7 +195,11 @@ public final class ApiController extends HttpServlet {
                 }
             }
 
-            // All subsequent endpoints require authentication
+            // =================================================================
+            // 4. ACCESS CONTROL GUARDS
+            // =================================================================
+
+            // All remaining endpoints require an authenticated user
             if (user == null) {
                 error(response, 401, "Please sign in to continue.");
                 return;
@@ -175,24 +207,30 @@ public final class ApiController extends HttpServlet {
 
             long currentUserId = ((Number) user.get("id")).longValue();
 
-            // Admin authorization check
+            // Endpoints starting with /admin require the ADMIN role
             if (path.startsWith("/admin") && !"ADMIN".equals(user.get("role"))) {
                 error(response, 403, "Administrator access is required.");
                 return;
             }
 
-            // Handle authenticated GET requests
+            // =================================================================
+            // 5. AUTHENTICATED READ ENDPOINTS (GET)
+            // =================================================================
+
             if (method.equals("GET")) {
+                // Endpoint: GET /api/packages -> Catalog of published packages for travelers
                 if (path.equals("/packages")) {
                     write(response, PackageService.overview(connection, currentUserId, false));
                     return;
                 }
 
+                // Endpoint: GET /api/admin/packages -> Full package operations suite for admins
                 if (path.equals("/admin/packages")) {
                     write(response, PackageService.overview(connection, currentUserId, true));
                     return;
                 }
 
+                // Endpoint: GET /api/destination-photo?id={id} -> Destination cover image
                 if (path.equals("/destination-photo")) {
                     long destinationPhotoId = parseId(request.getParameter("id"));
                     boolean isAdmin = "ADMIN".equals(user.get("role"));
@@ -220,11 +258,13 @@ public final class ApiController extends HttpServlet {
                     return;
                 }
 
+                // Endpoint: GET /api/data -> Main traveler dashboard payload (trips, destinations, wishlist, etc.)
                 if (path.equals("/data")) {
                     write(response, data(connection, currentUserId));
                     return;
                 }
 
+                // Endpoint: GET /api/trip?id={id} -> Trip details including itinerary, expenses, packing
                 if (path.equals("/trip")) {
                     long tripDetailId = parseId(request.getParameter("id"));
                     Map<String, Object> tripData = owned(connection, currentUserId, tripDetailId);
@@ -248,6 +288,7 @@ public final class ApiController extends HttpServlet {
                     return;
                 }
 
+                // Endpoint: GET /api/photo?id={id} -> Private memory photograph
                 if (path.equals("/photo")) {
                     long photoMemoryId = parseId(request.getParameter("id"));
                     List<Map<String, Object>> rows = query(
@@ -274,6 +315,7 @@ public final class ApiController extends HttpServlet {
                     return;
                 }
 
+                // Endpoint: GET /api/admin -> Admin management dashboard overview
                 if (path.equals("/admin")) {
                     write(response, adminData(connection, request));
                     return;
@@ -282,15 +324,19 @@ public final class ApiController extends HttpServlet {
                 throw new Missing();
             }
 
-            // Handle authenticated POST requests inside a transaction
+            // =================================================================
+            // 6. AUTHENTICATED WRITE ENDPOINTS (POST inside Transaction)
+            // =================================================================
+
             connection.setAutoCommit(false);
             try {
-                // Lock the user's row to prevent concurrent race conditions
+                // Lock user row to prevent concurrent race conditions
                 query(connection, "SELECT id FROM users WHERE id=? FOR UPDATE", currentUserId);
 
                 Map<String, Object> output = new LinkedHashMap<>();
                 output.put("ok", true);
 
+                // --- Admin Package Suite Operations ---
                 if (path.equals("/admin/package")) {
                     output.put("id", PackageService.save(connection, currentUserId, body));
                 } else if (path.equals("/admin/hotel")) {
@@ -301,7 +347,9 @@ public final class ApiController extends HttpServlet {
                     output.put("id", PackageService.payment(connection, currentUserId, body));
                 } else if (path.equals("/admin/booking-status")) {
                     PackageService.status(connection, currentUserId, body, true);
-                } else if (path.equals("/booking")) {
+                }
+                // --- Traveler Booking Operations ---
+                else if (path.equals("/booking")) {
                     if (!"CLIENT".equals(user.get("role"))) {
                         throw new IllegalArgumentException("Use a traveler account to request a package.");
                     }
@@ -310,7 +358,9 @@ public final class ApiController extends HttpServlet {
                     PackageService.status(connection, currentUserId, body, false);
                 } else if (path.equals("/booking-demo-payment")) {
                     output.put("id", PackageService.demoPayment(connection, currentUserId, body));
-                } else if (path.equals("/trip")) {
+                }
+                // --- Traveler Trip Operations ---
+                else if (path.equals("/trip")) {
                     output.put("id", saveTrip(connection, currentUserId, body));
                 } else if (path.equals("/trip-status")) {
                     long tripId = number(body, "id", 1, Long.MAX_VALUE);
@@ -327,7 +377,9 @@ public final class ApiController extends HttpServlet {
                 } else if (path.equals("/expenses") || path.equals("/itinerary") || path.equals("/packing")) {
                     String entityName = path.substring(1);
                     child(connection, currentUserId, entityName, body);
-                } else if (path.equals("/wishlist")) {
+                }
+                // --- Wishlist Operations ---
+                else if (path.equals("/wishlist")) {
                     long wishlistDestId = number(body, "destination_id", 1, Long.MAX_VALUE);
                     if (Boolean.TRUE.equals(body.get("saved"))) {
                         List<Map<String, Object>> destRows = query(
@@ -355,7 +407,9 @@ public final class ApiController extends HttpServlet {
                             wishlistDestId
                         );
                     }
-                } else if (path.equals("/memory")) {
+                }
+                // --- Travel Memories & Photo Gallery ---
+                else if (path.equals("/memory")) {
                     if ("delete".equals(body.get("action"))) {
                         long memoryId = number(body, "id", 1, Long.MAX_VALUE);
                         int deletedCount = execute(
@@ -399,7 +453,9 @@ public final class ApiController extends HttpServlet {
                             photo(body)
                         );
                     }
-                } else if (path.equals("/feedback")) {
+                }
+                // --- Feedback Reviews ---
+                else if (path.equals("/feedback")) {
                     long feedbackTripId = number(body, "trip_id", 1, Long.MAX_VALUE);
                     Map<String, Object> trip = owned(connection, currentUserId, feedbackTripId);
                     completed(trip);
@@ -411,7 +467,9 @@ public final class ApiController extends HttpServlet {
                         number(body, "rating", 1, 5),
                         text(body, "message", 2000)
                     );
-                } else if (path.equals("/profile")) {
+                }
+                // --- Traveler Profile & Password Management ---
+                else if (path.equals("/profile")) {
                     String updatedName = text(body, "name", 100);
                     String updatedEmail = email(body);
                     execute(
@@ -443,7 +501,9 @@ public final class ApiController extends HttpServlet {
                         currentUserId
                     );
                     output.put("sign_in_again", true);
-                } else if (path.equals("/admin/destination")) {
+                }
+                // --- Admin Destination Management ---
+                else if (path.equals("/admin/destination")) {
                     long destId = 0;
                     if (body.containsKey("id")) {
                         destId = number(body, "id", 1, Long.MAX_VALUE);
@@ -539,7 +599,9 @@ public final class ApiController extends HttpServlet {
 
                     output.put("id", destId);
                     audit(connection, currentUserId, "Saved destination", destId);
-                } else if (path.equals("/admin/user")) {
+                }
+                // --- Admin User Access Management ---
+                else if (path.equals("/admin/user")) {
                     long targetUserId = number(body, "id", 1, Long.MAX_VALUE);
                     if (targetUserId == currentUserId) {
                         throw new IllegalArgumentException("You cannot change your own access here.");
@@ -564,7 +626,9 @@ public final class ApiController extends HttpServlet {
                         targetUserId
                     );
                     audit(connection, currentUserId, "Changed user access", targetUserId);
-                } else if (path.equals("/admin/settings")) {
+                }
+                // --- Admin Platform Settings ---
+                else if (path.equals("/admin/settings")) {
                     Map<String, Object> emailCheckMap = new HashMap<>();
                     emailCheckMap.put("email", text(body, "support_email", 254));
                     email(emailCheckMap);
@@ -589,7 +653,9 @@ public final class ApiController extends HttpServlet {
                         registrationEnabled
                     );
                     audit(connection, currentUserId, "Updated experience settings", 0);
-                } else if (path.equals("/admin/feedback")) {
+                }
+                // --- Admin Feedback Response ---
+                else if (path.equals("/admin/feedback")) {
                     long feedbackId = number(body, "id", 1, Long.MAX_VALUE);
                     String responseText = text(body, "response", 2000);
                     int updated = execute(
@@ -606,12 +672,16 @@ public final class ApiController extends HttpServlet {
                     throw new Missing();
                 }
 
+                // Commit the entire transaction
                 connection.commit();
+
+                // If password was changed, invalidate session to require re-login
                 if (Boolean.TRUE.equals(output.get("sign_in_again"))) {
                     session.invalidate();
                 }
                 write(response, output);
             } catch (Exception e) {
+                // Roll back changes on any error
                 connection.rollback();
                 throw e;
             } finally {
@@ -634,7 +704,13 @@ public final class ApiController extends HttpServlet {
         }
     }
 
-    // Handles user login and new account registration
+    // =========================================================================
+    // 7. HELPER & UTILITY METHODS
+    // =========================================================================
+
+    /**
+     * Handles user login and new account registration with rate-limiting protection.
+     */
     private void authenticate(
         Connection connection,
         DatabaseSession session,
@@ -649,13 +725,15 @@ public final class ApiController extends HttpServlet {
 
         connection.setAutoCommit(false);
         try {
-            execute(connection, "DELETE FROM login_attempts WHERE window_start<?", now - 900000);
+            // Remove login attempt records older than 15 minutes
+            execute(connection, "DELETE FROM login_attempts WHERE window_start<?", now - 900000L);
             List<Map<String, Object>> attempts = query(
                 connection,
                 "SELECT attempts FROM login_attempts WHERE attempt_key=? FOR UPDATE",
                 key
             );
 
+            // Block if more than 8 failed attempts within the 15-minute window
             if (!attempts.isEmpty()) {
                 int count = ((Number) attempts.get(0).get("attempts")).intValue();
                 if (count >= 8) {
@@ -685,6 +763,7 @@ public final class ApiController extends HttpServlet {
             connection.setAutoCommit(true);
         }
 
+        // Handle Registration
         if (path.equals("/register")) {
             Map<String, String> currentSettings = settings(connection);
             if (!"true".equals(currentSettings.get("registration_enabled"))) {
@@ -700,12 +779,14 @@ public final class ApiController extends HttpServlet {
             );
         }
 
+        // Query user record by email
         List<Map<String, Object>> rows = query(
             connection,
             "SELECT * FROM users WHERE email=?",
             email
         );
 
+        // Constant-time password verification (uses dummy hash if email does not exist)
         String hashToVerify = DUMMY_PASSWORD_HASH;
         if (!rows.isEmpty()) {
             hashToVerify = rows.get(0).get("password").toString();
@@ -717,6 +798,7 @@ public final class ApiController extends HttpServlet {
             return;
         }
 
+        // Login successful: reset failed attempt counter and set authenticated session
         execute(connection, "DELETE FROM login_attempts WHERE attempt_key=?", key);
 
         long userId = ((Number) rows.get(0).get("id")).longValue();
@@ -728,7 +810,9 @@ public final class ApiController extends HttpServlet {
         write(response, okResponse);
     }
 
-    // Fetches all user dashboard data: destinations, trips, wishlist, memories, feedback, settings
+    /**
+     * Fetches all user dashboard data: active destinations, user trips, wishlist, memories, and feedback.
+     */
     private Map<String, Object> data(Connection connection, long userId) throws SQLException {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put(
@@ -771,7 +855,9 @@ public final class ApiController extends HttpServlet {
         return result;
     }
 
-    // Fetches admin panel management data
+    /**
+     * Fetches admin dashboard management data (paginated user accounts, feedback reviews, destinations, audit trail).
+     */
     private Map<String, Object> adminData(Connection connection, HttpServletRequest request)
         throws SQLException {
         String search = "";
@@ -846,7 +932,9 @@ public final class ApiController extends HttpServlet {
         return out;
     }
 
-    // Helper to parse page number from query parameters
+    /**
+     * Parses pagination page numbers safely.
+     */
     private static int page(HttpServletRequest request, String key) {
         String value = request.getParameter(key);
         if (value == null) {
@@ -863,7 +951,9 @@ public final class ApiController extends HttpServlet {
         }
     }
 
-    // Retrieves site settings key-value map
+    /**
+     * Fetches application settings as a key-value map.
+     */
     private static Map<String, String> settings(Connection connection) throws SQLException {
         Map<String, String> out = new LinkedHashMap<>();
         List<Map<String, Object>> settingRows = query(connection, "SELECT * FROM settings");
@@ -874,7 +964,9 @@ public final class ApiController extends HttpServlet {
         return out;
     }
 
-    // Validates and normalizes email input
+    /**
+     * Validates and normalizes email addresses.
+     */
     private static String email(Map<String, Object> body) {
         String s = text(body, "email", 254).toLowerCase(Locale.ROOT);
         if (!s.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) {
@@ -883,7 +975,9 @@ public final class ApiController extends HttpServlet {
         return s;
     }
 
-    // Parses a positive long ID from string
+    /**
+     * Parses a positive numeric ID.
+     */
     private static long parseId(String str) {
         try {
             long id = Long.parseLong(str);
@@ -896,7 +990,9 @@ public final class ApiController extends HttpServlet {
         }
     }
 
-    // Logs an administrative action
+    /**
+     * Records administrative actions into the audit_log table.
+     */
     private static void audit(Connection connection, long userId, String action, long targetId)
         throws SQLException {
         execute(
@@ -908,7 +1004,10 @@ public final class ApiController extends HttpServlet {
         );
     }
 
-    // Validates, resizes and decodes an uploaded base64 photo
+    /**
+     * Validates, normalizes, resizes, and sanitizes uploaded Base64 photo images.
+     * Prevents image decompression bombs and strips EXIF metadata for privacy.
+     */
     static byte[] photo(Map<String, Object> body) throws IOException {
         String raw = optional(body, "photo", 4100000);
         if (raw.trim().isEmpty()) {
@@ -973,12 +1072,16 @@ public final class ApiController extends HttpServlet {
         }
     }
 
-    // Serializes object as JSON and writes to response
+    /**
+     * Serializes an object to JSON and writes it to the HTTP response stream.
+     */
     private static void write(HttpServletResponse response, Object obj) throws IOException {
         JSON.writeValue(response.getOutputStream(), obj);
     }
 
-    // Sends a JSON error message with HTTP status code
+    /**
+     * Sends an HTTP JSON error response with an HTTP status code.
+     */
     private static void error(HttpServletResponse response, int status, String message)
         throws IOException {
         response.setStatus(status);

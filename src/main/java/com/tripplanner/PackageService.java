@@ -16,32 +16,59 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-// PackageService manages package listings, bookings, payments and suppliers (hotels and transport)
+/**
+ * PackageService manages travel package listings, hotel/transport suppliers, bookings, and payments.
+ * 
+ * Key Responsibilities:
+ * 1. Package Catalog & Overview: Queries curated packages with joined destination, hotel, and transport data.
+ * 2. Balance & Status Calculation: Dynamically computes paid amounts, outstanding balances, and payment statuses.
+ * 3. Package Management (Admin): Creates, updates, publishes, or deletes package records.
+ * 4. Supplier Management (Admin): Manages hotel accommodations and transportation routes.
+ * 5. Booking Workflow (Traveler): Validates traveler limits, captures package snapshot, and creates bookings.
+ * 6. Simulated Payment Ledger: Records demo receipts and refunds, enforcing double-entry financial integrity.
+ */
 public final class PackageService {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final String CATALOG =
+
+    // Base SQL query joining packages with destinations, hotels, and transport options
+    private static final String CATALOG_SQL =
         "SELECT p.*,d.name AS destination,d.season,h.name AS hotel,h.location AS hotel_location,h.description AS hotel_description,h.amenities,t.name AS transport,t.mode,t.route_details,t.description AS transport_description " +
         "FROM travel_packages p " +
         "JOIN destinations d ON d.id=p.destination_id " +
         "JOIN hotels h ON h.id=p.hotel_id " +
         "JOIN transport_options t ON t.id=p.transport_id";
 
-    // Returns all travel packages for users or admins
+    // =========================================================================
+    // 1. PACKAGE CATALOG & OVERVIEW QUERIES
+    // =========================================================================
+
+    /**
+     * Retrieves the package catalog list.
+     * - Travelers: Only see active, non-deleted packages whose destination, hotel, and transport are active.
+     * - Administrators: See all non-deleted packages (including drafts/inactive ones).
+     */
     public static List<Map<String, Object>> catalog(Connection connection, boolean admin)
         throws SQLException {
         String filter = admin
             ? " WHERE p.deleted=FALSE"
             : " WHERE p.deleted=FALSE AND p.active=TRUE AND d.active=TRUE AND h.active=TRUE AND t.active=TRUE";
-        return query(connection, CATALOG + filter + " ORDER BY p.id DESC");
+        return query(connection, CATALOG_SQL + filter + " ORDER BY p.id DESC");
     }
 
-    // Returns overview data including packages, user bookings and payment statuses
+    /**
+     * Compiles overview data for dashboard views:
+     * - List of packages
+     * - User bookings (all bookings for admin, or personal bookings for travelers)
+     * - Payment history, total paid, remaining balance, and status (PAID, PARTIAL, UNPAID, REFUNDED)
+     * - Admin reference lists (hotels, transport options, destinations)
+     */
     public static Map<String, Object> overview(Connection connection, long userId, boolean admin)
         throws SQLException {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("packages", catalog(connection, admin));
 
+        // Query bookings
         String bookingSql = "SELECT b.*,u.name AS customer,u.email FROM package_bookings b JOIN users u ON u.id=b.user_id";
         List<Map<String, Object>> bookings;
         if (admin) {
@@ -50,7 +77,7 @@ public final class PackageService {
             bookings = query(connection, bookingSql + " WHERE b.user_id=? ORDER BY b.id DESC", userId);
         }
 
-        // Calculate paid amounts and payment status for each booking
+        // Calculate paid totals and payment status for each booking
         for (Map<String, Object> booking : bookings) {
             Object bookingId = booking.get("id");
             List<Map<String, Object>> payments = query(
@@ -61,12 +88,14 @@ public final class PackageService {
 
             BigDecimal paid = BigDecimal.ZERO;
             BigDecimal received = BigDecimal.ZERO;
+
             for (Map<String, Object> payment : payments) {
                 BigDecimal amount = new BigDecimal(payment.get("amount").toString());
                 if ("RECEIPT".equals(payment.get("kind"))) {
                     paid = paid.add(amount);
                     received = received.add(amount);
                 } else {
+                    // REFUND decreases the net paid amount
                     paid = paid.subtract(amount);
                 }
             }
@@ -76,6 +105,7 @@ public final class PackageService {
             booking.put("balance", total.subtract(paid));
             booking.put("payments", payments);
 
+            // Determine textual payment status
             String paymentStatus;
             if (paid.signum() == 0) {
                 if (received.signum() > 0) {
@@ -93,7 +123,7 @@ public final class PackageService {
 
         result.put("bookings", bookings);
 
-        // Include admin-specific reference lists
+        // Include admin dropdown reference options
         if (admin) {
             result.put("hotels", query(connection, "SELECT * FROM hotels ORDER BY name"));
             result.put("transport", query(connection, "SELECT * FROM transport_options ORDER BY name"));
@@ -103,7 +133,9 @@ public final class PackageService {
         return result;
     }
 
-    // Fetches a single database row by table and id
+    /**
+     * Helper to fetch a locked row from any table by ID.
+     */
     private static Map<String, Object> row(Connection connection, String table, long id)
         throws SQLException {
         List<Map<String, Object>> rows = query(
@@ -117,7 +149,9 @@ public final class PackageService {
         return rows.get(0);
     }
 
-    // Records an action in the audit log
+    /**
+     * Helper to write an administrative audit entry into the audit_log table.
+     */
     private static void audit(Connection connection, long userId, String action, long targetId)
         throws SQLException {
         execute(
@@ -129,7 +163,13 @@ public final class PackageService {
         );
     }
 
-    // Saves or updates a supplier (hotel or transport option)
+    // =========================================================================
+    // 2. SUPPLIER MANAGEMENT (Hotels & Transportation)
+    // =========================================================================
+
+    /**
+     * Saves or updates a supplier (either a Hotel accommodation or a Transportation option).
+     */
     public static long supplier(
         Connection connection,
         long userId,
@@ -157,6 +197,7 @@ public final class PackageService {
 
         boolean active = Boolean.TRUE.equals(body.get("active")) && !action.equals("delete");
 
+        // Prevent disabling a supplier if published packages are currently using it
         if (id > 0 && !active) {
             List<Map<String, Object>> linkedPackages = query(
                 connection,
@@ -168,6 +209,7 @@ public final class PackageService {
             }
         }
 
+        // Action: DELETE (soft-deletes by setting active=FALSE)
         if (action.equals("delete")) {
             execute(connection, "UPDATE " + table + " SET active=FALSE WHERE id=?", id);
             audit(connection, userId, "Archived " + table, id);
@@ -234,7 +276,17 @@ public final class PackageService {
         return id;
     }
 
-    // Creates or updates a travel package
+    // =========================================================================
+    // 3. PACKAGE CREATION & UPDATES (Admin)
+    // =========================================================================
+
+    /**
+     * Creates or updates a curated travel package.
+     * Features:
+     * - Optimistic Locking: Compares version numbers to prevent concurrent edits from overwriting each other.
+     * - Auto-Resolves: Allows entering free-form destination, hotel, or transport names, creating them automatically.
+     * - Photo Support: Decodes base64 images and saves them into package_photos.
+     */
     public static long save(Connection connection, long userId, Map<String, Object> body)
         throws Exception {
         long packageId = 0;
@@ -273,7 +325,7 @@ public final class PackageService {
             throw new IllegalArgumentException("Unknown package action.");
         }
 
-        // Resolve or create destination
+        // Step 1: Resolve destination (existing ID or auto-create from name)
         long destinationId;
         String destinationName = "";
         if (body.containsKey("destination_name") && body.get("destination_name") != null) {
@@ -312,7 +364,7 @@ public final class PackageService {
             destinationId = number(body, "destination_id", 1, Long.MAX_VALUE);
         }
 
-        // Resolve or create hotel
+        // Step 2: Resolve hotel (existing ID or auto-create from name)
         long hotelId;
         String hotelName = "";
         if (body.containsKey("hotel_name") && body.get("hotel_name") != null) {
@@ -332,10 +384,7 @@ public final class PackageService {
                     execute(connection, "UPDATE hotels SET active=TRUE WHERE id=?", hotelId);
                 }
             } else {
-                String location = "Central Location";
-                if (!destinationName.isEmpty()) {
-                    location = destinationName + " Central";
-                }
+                String location = destinationName.isEmpty() ? "Central Location" : (destinationName + " Central");
                 hotelId = insert(
                     connection,
                     "INSERT INTO hotels(name,location,description,amenities,active) VALUES (?,?,?,?,TRUE)",
@@ -349,7 +398,7 @@ public final class PackageService {
             hotelId = number(body, "hotel_id", 1, Long.MAX_VALUE);
         }
 
-        // Resolve or create transport
+        // Step 3: Resolve transport option (existing ID or auto-create from name)
         long transportId;
         String transportName = "";
         if (body.containsKey("transport_name") && body.get("transport_name") != null) {
@@ -396,7 +445,7 @@ public final class PackageService {
             transportId = number(body, "transport_id", 1, Long.MAX_VALUE);
         }
 
-        // Validate that linked entities are active if this package is published
+        // Step 4: Validate linked entities if publishing package
         boolean active = Boolean.TRUE.equals(body.get("active"));
         Map<String, Object> linkedDest = row(connection, "destinations", destinationId);
         Map<String, Object> linkedHotel = row(connection, "hotels", hotelId);
@@ -445,6 +494,7 @@ public final class PackageService {
         long duration = number(body, "duration", 1, 60);
         long maxPeople = number(body, "max_people", 1, 50);
 
+        // Step 5: Save package row
         if (packageId == 0) {
             packageId = insert(
                 connection,
@@ -486,6 +536,7 @@ public final class PackageService {
             );
         }
 
+        // Step 6: Store custom uploaded photo if provided
         if (photoBytes != null) {
             execute(connection, "DELETE FROM package_photos WHERE package_id=?", packageId);
             execute(
@@ -506,7 +557,17 @@ public final class PackageService {
         return packageId;
     }
 
-    // Books a package for a user
+    // =========================================================================
+    // 4. TRAVELER BOOKING WORKFLOW (Client)
+    // =========================================================================
+
+    /**
+     * Submits a package booking request for a traveler.
+     * Features:
+     * - Idempotency: Uses request_key to prevent duplicate charges or double bookings.
+     * - Snapshot Storage: Serializes full package, hotel, and transport state at time of booking
+     *   so future catalog updates don't alter the traveler's agreement.
+     */
     public static long book(Connection connection, long userId, Map<String, Object> body)
         throws Exception {
         String key = text(body, "request_key", 80);
@@ -514,6 +575,7 @@ public final class PackageService {
             throw new IllegalArgumentException("Invalid booking request key.");
         }
 
+        // Idempotency check: if already processed, return existing booking ID
         List<Map<String, Object>> existing = query(
             connection,
             "SELECT id FROM package_bookings WHERE user_id=? AND request_key=?",
@@ -530,6 +592,7 @@ public final class PackageService {
             throw new IllegalArgumentException("This package is no longer available.");
         }
 
+        // Version verification to ensure traveler agreed to the latest price and terms
         long reqVersion = number(body, "version", 1, Integer.MAX_VALUE);
         long curVersion = ((Number) pkg.get("version")).longValue();
         if (reqVersion != curVersion) {
@@ -565,7 +628,8 @@ public final class PackageService {
             throw new IllegalArgumentException("Review and accept the package terms first.");
         }
 
-        List<Map<String, Object>> snapshotList = query(connection, CATALOG + " WHERE p.id=?", packageId);
+        // Capture immutable snapshot of the package catalog entry
+        List<Map<String, Object>> snapshotList = query(connection, CATALOG_SQL + " WHERE p.id=?", packageId);
         Map<String, Object> snapshot = snapshotList.get(0);
 
         BigDecimal unitPrice = new BigDecimal(pkg.get("price").toString());
@@ -600,7 +664,14 @@ public final class PackageService {
         );
     }
 
-    // Updates a booking's status
+    // =========================================================================
+    // 5. BOOKING STATUS & SIMULATED PAYMENT LEDGER
+    // =========================================================================
+
+    /**
+     * Updates booking workflow status:
+     * - REQUESTED -> CONFIRMED -> COMPLETED or CANCELLED
+     */
     public static void status(
         Connection connection,
         long userId,
@@ -610,6 +681,7 @@ public final class PackageService {
         long id = number(body, "id", 1, Long.MAX_VALUE);
         Map<String, Object> booking = row(connection, "package_bookings", id);
 
+        // Authorization check for client vs admin
         if (!admin) {
             long bookingUserId = ((Number) booking.get("user_id")).longValue();
             if (bookingUserId != userId) {
@@ -629,6 +701,7 @@ public final class PackageService {
             return;
         }
 
+        // Validate state transitions
         boolean valid = false;
         if (current.equals("REQUESTED") && (next.equals("CONFIRMED") || next.equals("CANCELLED"))) {
             valid = true;
@@ -655,7 +728,9 @@ public final class PackageService {
         audit(connection, userId, "Booking " + next, id);
     }
 
-    // Records a simulated demo payment
+    /**
+     * Allows travelers to simulate paying their booking balance in full.
+     */
     public static long demoPayment(Connection connection, long userId, Map<String, Object> body)
         throws SQLException {
         long bookingId = number(body, "booking_id", 1, Long.MAX_VALUE);
@@ -682,6 +757,7 @@ public final class PackageService {
             return ((Number) previous.get(0).get("id")).longValue();
         }
 
+        // Calculate remaining balance
         BigDecimal paid = BigDecimal.ZERO;
         List<Map<String, Object>> paymentRows = query(
             connection,
@@ -710,7 +786,13 @@ public final class PackageService {
         return payment(connection, userId, paymentData);
     }
 
-    // Records a payment (receipt or refund)
+    /**
+     * Records a payment entry (RECEIPT or REFUND) in the booking payments ledger.
+     * Enforces financial accounting rules:
+     * - Receipts cannot exceed the booking's unpaid balance.
+     * - Receipts cannot be added to cancelled bookings.
+     * - Refunds cannot exceed what has been paid.
+     */
     public static long payment(Connection connection, long userId, Map<String, Object> body)
         throws SQLException {
         long bookingId = number(body, "booking_id", 1, Long.MAX_VALUE);
@@ -725,6 +807,7 @@ public final class PackageService {
         String reference = text(body, "reference", 150);
         String note = text(body, "note", 1000);
 
+        // Check for duplicate payment reference
         List<Map<String, Object>> duplicate = query(
             connection,
             "SELECT * FROM booking_payments WHERE reference=?",
@@ -747,6 +830,7 @@ public final class PackageService {
             throw new IllegalArgumentException("This reference is already used for another payment entry.");
         }
 
+        // Calculate current paid amount
         BigDecimal paid = BigDecimal.ZERO;
         List<Map<String, Object>> paymentRows = query(
             connection,
@@ -764,6 +848,7 @@ public final class PackageService {
 
         BigDecimal total = new BigDecimal(booking.get("total").toString());
 
+        // Validate receipt constraints
         if (kind.equals("RECEIPT")) {
             boolean isCancelled = booking.get("status").equals("CANCELLED");
             boolean exceedsBalance = paid.add(amount).compareTo(total) > 0;
@@ -774,6 +859,7 @@ public final class PackageService {
             }
         }
 
+        // Validate refund constraints
         if (kind.equals("REFUND") && amount.compareTo(paid) > 0) {
             throw new IllegalArgumentException("Refund cannot exceed the amount currently paid.");
         }
@@ -791,5 +877,9 @@ public final class PackageService {
 
         audit(connection, userId, "Recorded " + kind + " for booking #" + bookingId, paymentId);
         return paymentId;
+    }
+
+    private PackageService() {
+        // Utility service class - prevent direct instantiation
     }
 }

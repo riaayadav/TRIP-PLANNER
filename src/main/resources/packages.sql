@@ -1,3 +1,9 @@
+-- =============================================================================
+-- ROAM TRIP PLANNER - PACKAGES & BOOKINGS SCHEMA (MySQL 8 / Relational Database)
+-- =============================================================================
+
+-- TABLE 1: HOTELS (Suppliers)
+-- Hotel and resort accommodations with amenities and locations.
 CREATE TABLE IF NOT EXISTS hotels (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(120) NOT NULL,
@@ -7,6 +13,8 @@ CREATE TABLE IF NOT EXISTS hotels (
     active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- TABLE 2: TRANSPORT OPTIONS (Suppliers)
+-- Transportation modes (Flight, Train, AC Bus, Private Cab) and route descriptions.
 CREATE TABLE IF NOT EXISTS transport_options (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(120) NOT NULL,
@@ -16,6 +24,9 @@ CREATE TABLE IF NOT EXISTS transport_options (
     active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- TABLE 3: TRAVEL PACKAGES
+-- Bundled holiday packages combining destination, hotel stay, and transportation.
+-- Includes optimistic concurrency locking via the version column.
 CREATE TABLE IF NOT EXISTS travel_packages (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     destination_id BIGINT NOT NULL,
@@ -39,6 +50,8 @@ CREATE TABLE IF NOT EXISTS travel_packages (
     FOREIGN KEY (transport_id) REFERENCES transport_options (id)
 );
 
+-- TABLE 4: PACKAGE BOOKINGS
+-- Traveler reservations with immutable package snapshot and unique request key.
 CREATE TABLE IF NOT EXISTS package_bookings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
@@ -57,6 +70,8 @@ CREATE TABLE IF NOT EXISTS package_bookings (
     FOREIGN KEY (package_id) REFERENCES travel_packages (id)
 );
 
+-- TABLE 5: BOOKING PAYMENTS
+-- Financial transaction ledger recording charges and refunds.
 CREATE TABLE IF NOT EXISTS booking_payments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     booking_id BIGINT NOT NULL,
@@ -70,6 +85,8 @@ CREATE TABLE IF NOT EXISTS booking_payments (
     FOREIGN KEY (actor_id) REFERENCES users (id)
 );
 
+-- TABLE 6: PACKAGE PHOTOS
+-- Binary image storage for custom package cover photos.
 CREATE TABLE IF NOT EXISTS package_photos (
     package_id BIGINT PRIMARY KEY,
     photo MEDIUMBLOB NOT NULL,

@@ -5,12 +5,27 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 
-// Database manages connection pooling and helper methods for SQL queries and execution
+/**
+ * Database manages JDBC connection pooling, schema migrations, and SQL query execution.
+ * 
+ * Key Responsibilities:
+ * 1. Connection Pooling: Uses HikariCP for high-performance database connection reuse.
+ * 2. SQL Execution: Safe execution using PreparedStatement to prevent SQL injection.
+ * 3. Schema Migrations: Automatically checks and migrates database tables from v1 to v4.
+ * 4. Seed Data: Populates sample travel destinations and initial administrator credentials.
+ */
 public final class Database implements AutoCloseable {
 
     private final HikariDataSource pool;
 
-    // Helper to get configuration from system property or environment variable
+    // =========================================================================
+    // 1. CONFIGURATION & CONNECTION POOL (HikariCP)
+    // =========================================================================
+
+    /**
+     * Reads a configuration property from Java System Properties or System Environment.
+     * If neither is set, returns the provided fallback value.
+     */
     public static String env(String key, String fallback) {
         String prop = System.getProperty(key);
         if (prop != null) {
@@ -23,41 +38,61 @@ public final class Database implements AutoCloseable {
         return fallback;
     }
 
+    /**
+     * Configures and starts the HikariCP database connection pool.
+     */
     public Database() {
         HikariConfig cfg = new HikariConfig();
+
+        // Database connection URL (defaults to local MySQL, supports H2 in test mode)
         cfg.setJdbcUrl(
             env("DB_URL", "jdbc:mysql://localhost:3306/trip_planner?connectionTimeZone=UTC")
         );
         cfg.setUsername(env("DB_USER", "trip_planner"));
         cfg.setPassword(env("DB_PASSWORD", ""));
 
+        // Connection pool sizing (between 1 and 20 connections)
         int poolSize = Integer.parseInt(env("DB_POOL_SIZE", "5"));
         if (poolSize < 1 || poolSize > 20) {
             throw new IllegalArgumentException("DB_POOL_SIZE must be between 1 and 20");
         }
         cfg.setMaximumPoolSize(poolSize);
         cfg.setMinimumIdle(0);
-        cfg.setConnectionTimeout(10000);
-        pool = new HikariDataSource(cfg);
+        cfg.setConnectionTimeout(10000); // 10 seconds timeout
+
+        // Initialize the pool
+        this.pool = new HikariDataSource(cfg);
     }
 
-    // Obtains a database connection from the connection pool
+    /**
+     * Obtains an active connection from the HikariCP connection pool.
+     */
     public Connection connection() throws SQLException {
         return pool.getConnection();
     }
 
-    // Executes a SELECT query and returns the results as a list of column-to-value maps
+    // =========================================================================
+    // 2. JDBC QUERY & EXECUTION HELPERS (SQL Injection Prevention)
+    // =========================================================================
+
+    /**
+     * Executes a SELECT query with prepared statement parameters.
+     * Returns results as a list of maps, where each map represents a row (columnName -> value).
+     */
     public static List<Map<String, Object>> query(Connection connection, String sql, Object... args)
         throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            // Bind arguments safely into '?' placeholders
             bind(statement, args);
-            statement.setMaxRows(1000);
-            statement.setQueryTimeout(10);
+            statement.setMaxRows(1000); // Safety limit on query result size
+            statement.setQueryTimeout(10); // 10-second query timeout
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 List<Map<String, Object>> resultList = new ArrayList<>();
                 ResultSetMetaData metadata = resultSet.getMetaData();
                 int columnCount = metadata.getColumnCount();
 
+                // Convert SQL ResultSet into standard Java Maps for easy JSON serialization
                 while (resultSet.next()) {
                     Map<String, Object> row = new LinkedHashMap<>();
                     for (int i = 1; i <= columnCount; i++) {
@@ -75,7 +110,9 @@ public final class Database implements AutoCloseable {
         }
     }
 
-    // Executes an UPDATE or DELETE statement and returns the affected rows count
+    /**
+     * Executes an UPDATE or DELETE statement and returns the number of affected rows.
+     */
     public static int execute(Connection connection, String sql, Object... args)
         throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -85,7 +122,9 @@ public final class Database implements AutoCloseable {
         }
     }
 
-    // Executes an INSERT statement and returns the generated primary key
+    /**
+     * Executes an INSERT statement and returns the automatically generated primary key (ID).
+     */
     public static long insert(Connection connection, String sql, Object... args)
         throws SQLException {
         try (
@@ -98,23 +137,32 @@ public final class Database implements AutoCloseable {
             statement.executeUpdate();
             try (ResultSet resultSet = statement.getGeneratedKeys()) {
                 if (!resultSet.next()) {
-                    throw new SQLException("No generated key");
+                    throw new SQLException("Failed to obtain generated primary key ID");
                 }
                 return resultSet.getLong(1);
             }
         }
     }
 
-    // Sets parameter values on a PreparedStatement
+    /**
+     * Helper method to bind parameters into PreparedStatement placeholders (1-indexed).
+     */
     private static void bind(PreparedStatement statement, Object[] args) throws SQLException {
         for (int i = 0; i < args.length; i++) {
             statement.setObject(i + 1, args[i]);
         }
     }
 
-    // Initializes database tables and seed data if needed
+    // =========================================================================
+    // 3. SCHEMA MIGRATION ENGINE (v1 -> v4)
+    // =========================================================================
+
+    /**
+     * Automatically verifies and runs database schema migrations up to version 4.
+     */
     public void initialize() throws Exception {
         try (Connection connection = connection()) {
+            // Check if database initialization is skipped in production
             if ("false".equals(env("DB_INITIALIZE", "true"))) {
                 List<Map<String, Object>> schemaRows = query(
                     connection,
@@ -128,12 +176,17 @@ public final class Database implements AutoCloseable {
                 return;
             }
 
+            // Create the schema version tracker table if it doesn't already exist
             execute(
                 connection,
                 "CREATE TABLE IF NOT EXISTS schema_version (version INT PRIMARY KEY)"
             );
 
-            // Step 1: Base schema
+            // -----------------------------------------------------------------
+            // Migration Step 1: Base Application Tables (schema.sql)
+            // Creates: users, destinations, trips, itinerary, expenses, packing,
+            //          wishlist, memories, feedback, audit_log, settings, login_attempts
+            // -----------------------------------------------------------------
             List<Map<String, Object>> v1Check = query(
                 connection,
                 "SELECT version FROM schema_version WHERE version=1"
@@ -180,7 +233,10 @@ public final class Database implements AutoCloseable {
                 execute(connection, "INSERT INTO schema_version(version) VALUES (1)");
             }
 
-            // Step 2: Web sessions
+            // -----------------------------------------------------------------
+            // Migration Step 2: Database-Backed Web Sessions
+            // Creates: web_sessions table for distributed, persistent user sessions
+            // -----------------------------------------------------------------
             List<Map<String, Object>> v2Check = query(
                 connection,
                 "SELECT version FROM schema_version WHERE version=2"
@@ -212,7 +268,11 @@ public final class Database implements AutoCloseable {
                 execute(connection, "INSERT INTO schema_version(version) VALUES (2)");
             }
 
-            // Step 3: Packages schema
+            // -----------------------------------------------------------------
+            // Migration Step 3: Package Management Suite (packages.sql)
+            // Creates: hotels, transport_options, travel_packages,
+            //          package_bookings, booking_payments, package_photos
+            // -----------------------------------------------------------------
             List<Map<String, Object>> v3Check = query(
                 connection,
                 "SELECT version FROM schema_version WHERE version=3"
@@ -239,7 +299,10 @@ public final class Database implements AutoCloseable {
                 "CREATE TABLE IF NOT EXISTS package_photos (package_id BIGINT PRIMARY KEY, photo MEDIUMBLOB NOT NULL, FOREIGN KEY(package_id) REFERENCES travel_packages(id) ON DELETE CASCADE)"
             );
 
-            // Step 4: Destination photos
+            // -----------------------------------------------------------------
+            // Migration Step 4: Destination Cover Photos Storage
+            // Creates: destination_photos table for custom uploaded cover images
+            // -----------------------------------------------------------------
             List<Map<String, Object>> v4Check = query(
                 connection,
                 "SELECT version FROM schema_version WHERE version=4"
@@ -252,13 +315,17 @@ public final class Database implements AutoCloseable {
                 execute(connection, "INSERT INTO schema_version(version) VALUES (4)");
             }
 
+            // =========================================================================
+            // 4. DEFAULT SEED DATA & BOOTSTRAP
+            // =========================================================================
+
             // Seed default destinations if table is empty
             List<Map<String, Object>> destCheck = query(connection, "SELECT id FROM destinations LIMIT 1");
             if (destCheck.isEmpty()) {
                 seed(connection);
             }
 
-            // Seed default settings if empty
+            // Seed default platform settings if empty
             List<Map<String, Object>> settingsCheck = query(connection, "SELECT setting_key FROM settings LIMIT 1");
             if (settingsCheck.isEmpty()) {
                 execute(
@@ -281,7 +348,7 @@ public final class Database implements AutoCloseable {
                 );
             }
 
-            // Create admin user if configured and none exists
+            // Create initial Administrator account if configured and none exists
             String adminEmail = env("ADMIN_EMAIL", "");
             String adminPassword = env("ADMIN_PASSWORD", "");
             if (!adminEmail.trim().isEmpty()) {
@@ -298,14 +365,17 @@ public final class Database implements AutoCloseable {
                         adminEmail.toLowerCase(Locale.ROOT),
                         Security.hash(adminPassword)
                     );
+                    System.out.println("Provisioned initial administrator account: " + adminEmail);
                 }
             }
         }
     }
 
-    // Seeds initial sample destinations
+    /**
+     * Seeds initial travel destinations for India (Manali, Goa, Munnar, Jaipur, Udaipur, Rishikesh).
+     */
     private void seed(Connection connection) throws SQLException {
-        String[][] rows = {
+        String[][] sampleDestinations = {
             {
                 "Manali",
                 "Himachal Pradesh, India",
@@ -380,8 +450,8 @@ public final class Database implements AutoCloseable {
             },
         };
 
-        for (int i = 0; i < rows.length; i++) {
-            String[] rowData = rows[i];
+        for (int i = 0; i < sampleDestinations.length; i++) {
+            String[] rowData = sampleDestinations[i];
             execute(
                 connection,
                 "INSERT INTO destinations(name,region,description,season,category,daily_cost,duration,activities,attractions,image) VALUES (?,?,?,?,?,?,?,?,?,?)",
@@ -390,7 +460,13 @@ public final class Database implements AutoCloseable {
         }
     }
 
-    // Closes the connection pool
+    // =========================================================================
+    // 5. RESOURCE CLEANUP
+    // =========================================================================
+
+    /**
+     * Closes the connection pool on application shutdown.
+     */
     @Override
     public void close() {
         pool.close();

@@ -1,21 +1,49 @@
 'use strict';
+
+/**
+ * =============================================================================
+ * ROAM TRIP PLANNER - FRONTEND SPA APPLICATION (app.js)
+ * =============================================================================
+ * 
+ * Architecture:
+ * - Single Page Application (SPA) driven by hash-based routing (#home, #explore, etc.).
+ * - Communicates with Jakarta Servlet backend via JSON REST API (/api/*).
+ * - Implements CSRF protection with X-CSRF-Token headers on all state-changing requests.
+ * - Supports responsive design, modal dialogs, and interactive dashboards.
+ */
+
+// =============================================================================
+// 1. APPLICATION STATE & DOM REFERENCES
+// =============================================================================
+
+// Root DOM containers
 const app = document.querySelector('#app'),
   modal = document.querySelector('#modal');
+
+// Central application state
 const state = {
-  user: null,
-  csrf: '',
-  data: null,
-  trip: null,
-  admin: null,
-  compare: new Set(),
-  authMode: 'login',
+  user: null,          // Authenticated user object (id, name, email, role)
+  csrf: '',            // Cross-Site Request Forgery security token
+  data: null,          // Main dashboard payload (destinations, trips, wishlist, memories)
+  trip: null,          // Active detailed trip (with itinerary, budget, packing)
+  admin: null,         // Admin dashboard payload (users, feedback, audit log)
+  compare: new Set(),  // Set of destination IDs selected for comparison
+  authMode: 'login',   // Current auth screen mode ('login' or 'register')
 };
+
+// =============================================================================
+// 2. DATA FORMATTING & STRING UTILITIES
+// =============================================================================
+
+// Formats numeric values to Indian Rupee (INR) currency: e.g. ₹2,800.00
 const formatMoney = (v) =>
   new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 2,
   }).format(Number(v || 0));
+
+// Sanitizes text to prevent Cross-Site Scripting (XSS) in HTML templates
 const escapeHtml = (v) =>
   String(v ?? '').replace(
     /[&<>"']/g,
@@ -56,6 +84,13 @@ const nav = [
 let toastTimer,
   clockTimer,
   renderGeneration = 0;
+// =============================================================================
+// 3. NOTIFICATION & NETWORK API CLIENT (REST API)
+// =============================================================================
+
+/**
+ * Displays a temporary toast notification message on screen.
+ */
 function toast(message, error = false) {
   const t = document.querySelector('#toast');
   t.textContent = message;
@@ -63,6 +98,14 @@ function toast(message, error = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => (t.className = ''), 5000);
 }
+
+/**
+ * Central API fetch wrapper:
+ * - Sends GET or POST requests to the backend /api/* endpoints
+ * - Automatically injects X-CSRF-Token headers for POST requests
+ * - Handles JSON serialization and parsing
+ * - Automatically redirects to login if 401 Unauthorized is returned
+ */
 async function api(path, body) {
   let r;
   try {
@@ -100,9 +143,18 @@ async function api(path, body) {
   }
   return data;
 }
+
+/**
+ * Refreshes main dashboard data from /api/data.
+ */
 async function refresh() {
   state.data = await api('data');
 }
+
+// =============================================================================
+// 4. REUSABLE UI BUILDER FUNCTIONS (HTML Component Generators)
+// =============================================================================
+
 function button(label, action, id = '', cls = 'btn-light') {
   return `<button class="btn ${cls}" type="button" data-action="${action}" data-id="${escapeHtml(id)}">${label}</button>`;
 }
@@ -572,6 +624,16 @@ function admin() {
     )}${submit('Save experience settings')}</form></div><div class="panel"><h2>Destination catalog</h2><p class="note">Unpublish a destination to remove it from discovery. Existing trips are preserved.</p><div class="table-responsive"><table class="table"><thead><tr><th>Destination</th><th>Season</th><th>Daily estimate</th><th>Visibility</th><th>Action</th></tr></thead><tbody>${a.destinations.map((d) => `<tr><td>${escapeHtml(d.name)}</td><td>${escapeHtml(d.season)}</td><td>${formatMoney(d.daily_cost)}</td><td>${d.active ? 'Published' : 'Hidden'}</td><td>${button('Edit', 'destination-edit', d.id, 'btn-light btn-sm')}</td></tr>`).join('')}</tbody></table></div></div><div class="panel"><h2>User access</h2><p class="note">Disabling an account immediately revokes its sessions.</p><form data-form="admin-search" class="d-flex gap-2">${input('q', 'Search users by name or email', a.pagination.q, 'search', 'maxlength="100"')}<button class="btn btn-primary align-self-end">Search</button></form>${adminPager('user')}<div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody>${a.users.map((u) => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${escapeHtml(u.role)}</td><td>${u.active ? 'Active' : 'Disabled'}</td><td>${u.role === 'CLIENT' ? button(u.active ? 'Disable' : 'Enable', 'user-toggle', u.id, 'btn-light btn-sm') : 'Operator managed'}</td></tr>`).join('')}</tbody></table></div></div><div class="panel"><h2>Traveler feedback</h2>${adminPager('feedback')}${a.feedback.map((f) => `<article class="border-bottom py-3"><span class="pill">${f.rating} / 5</span><h3 class="mt-2">${escapeHtml(f.title)} · ${escapeHtml(f.name)}</h3><p>${escapeHtml(f.message)}</p>${f.response ? `<p class="muted">Team: ${escapeHtml(f.response)}</p>` : ''}${button('Respond', 'feedback-reply', f.id, 'btn-light btn-sm')}</article>`).join('') || '<p class="muted">No feedback received yet.</p>'}</div><div class="panel"><h2>Recent admin activity</h2><div class="table-responsive"><table class="table"><thead><tr><th>Action</th><th>Administrator</th><th>Time (server)</th></tr></thead><tbody>${a.audit.map((a) => `<tr><td>${escapeHtml(a.action)} · #${a.target_id}</td><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.created_at)}</td></tr>`).join('')}</tbody></table></div></div>`
   );
 }
+// =============================================================================
+// 5. CLIENT-SIDE ROUTER & VIEW RENDERER (render)
+// =============================================================================
+
+/**
+ * Main application router and view orchestrator:
+ * - Checks user authentication state and current URL hash
+ * - Loads required data from /api/* endpoints
+ * - Renders the appropriate layout (Landing, Auth, Client Dashboard, or Admin Console)
+ */
 async function render() {
   const generation = ++renderGeneration;
   clearInterval(clockTimer);
@@ -660,6 +722,12 @@ async function render() {
     toast(e.message, true);
   }
 }
+/**
+ * Bootstraps the application on initial page load:
+ * 1. Calls GET /api/session to verify if user is signed in and fetch CSRF token
+ * 2. If signed in, calls GET /api/data to load user's trips, wishlist, and destinations
+ * 3. Calls render() to paint the active view based on location.hash
+ */
 async function start() {
   try {
     const s = await api('session');
@@ -673,6 +741,8 @@ async function start() {
     toast(e.message, true);
   }
 }
+
+// Re-render whenever the URL hash route changes (#home, #explore, #itinerary, etc.)
 window.addEventListener('hashchange', () => {
   if (modal.open) modal.close();
   window.scrollTo(0, 0);
@@ -765,6 +835,13 @@ function confirmAction(title, text, path, body, label) {
     `<p>${escapeHtml(text)}</p><form data-form="confirmed" data-path="${escapeHtml(path)}"><input type="hidden" name="payload" value="${escapeHtml(JSON.stringify(body))}"><div class="actions"><button class="btn btn-primary">${label}</button>${button('Keep it', 'close')}</div></form>`,
   );
 }
+// =============================================================================
+// 6. GLOBAL EVENT LISTENERS & USER INTERACTION HANDLERS
+// =============================================================================
+
+/**
+ * Handles all declarative data-action button clicks (Modals, Navigation, Trip CRUD, etc.)
+ */
 document.addEventListener('click', async (event) => {
   const el = event.target.closest('[data-action]');
   if (!el) return;

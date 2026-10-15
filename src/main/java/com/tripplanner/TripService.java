@@ -12,10 +12,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-// TripService handles validation and database operations for trips, itinerary, packing and expenses
+/**
+ * TripService provides business logic and validation for trips, itineraries, packing, and expenses.
+ * 
+ * Key Responsibilities:
+ * 1. Input Sanitization & Validation: Validates strings, numbers, dates, monetary amounts, and choices.
+ * 2. Authorization & Ownership Checks: Ensures users only view and modify their own trips.
+ * 3. Smart Trip Creation: Computes trip duration, generates suggested daily itineraries from destination
+ *    attractions, and creates a season-appropriate packing checklist.
+ * 4. Child Entity Management: CRUD operations for daily itinerary slots, packing items, and expense records.
+ */
 public final class TripService {
 
-    // Validates a required text field
+    // =========================================================================
+    // 1. INPUT SANITIZATION & VALIDATION HELPERS
+    // =========================================================================
+
+    /**
+     * Validates a required text field. Throws IllegalArgumentException if missing or too long.
+     */
     public static String text(Map<String, Object> body, String key, int max) {
         Object value = body.get(key);
         String str = "";
@@ -28,7 +43,9 @@ public final class TripService {
         return str;
     }
 
-    // Validates an optional text field
+    /**
+     * Validates an optional text field. Trims whitespace and checks maximum character length.
+     */
     public static String optional(Map<String, Object> body, String key, int max) {
         Object value = body.get(key);
         String str = "";
@@ -41,7 +58,9 @@ public final class TripService {
         return str;
     }
 
-    // Validates password input
+    /**
+     * Validates a password input string (1 to 128 characters).
+     */
     public static String password(Map<String, Object> body, String key) {
         Object value = body.get(key);
         if (!(value instanceof String)) {
@@ -54,7 +73,9 @@ public final class TripService {
         return pass;
     }
 
-    // Cleans and validates comma-separated list values
+    /**
+     * Parses and normalizes a comma-separated list of items (e.g. activities or attractions).
+     */
     public static String listText(Map<String, Object> body, String key, int max) {
         String value = text(body, key, max);
         String[] parts = value.split(",");
@@ -75,7 +96,9 @@ public final class TripService {
         return result;
     }
 
-    // Parses and validates a number within a range
+    /**
+     * Parses and validates a number within a specified minimum and maximum range.
+     */
     public static long number(Map<String, Object> body, String key, long min, long max) {
         try {
             long num = Long.parseLong(Objects.toString(body.get(key), ""));
@@ -88,7 +111,9 @@ public final class TripService {
         }
     }
 
-    // Parses and validates a monetary amount
+    /**
+     * Parses and validates a monetary amount (currency with up to 2 decimal places).
+     */
     public static BigDecimal money(Map<String, Object> body, String key) {
         try {
             BigDecimal amount = new BigDecimal(Objects.toString(body.get(key), "0"));
@@ -101,7 +126,9 @@ public final class TripService {
         }
     }
 
-    // Checks that a string is one of the allowed choices
+    /**
+     * Checks that an input value matches one of the allowed choices (enums/categories).
+     */
     public static String choice(Map<String, Object> body, String key, String... choices) {
         String selected = text(body, key, 40);
         boolean found = false;
@@ -117,7 +144,9 @@ public final class TripService {
         return selected;
     }
 
-    // Parses a date from yyyy-MM-dd format
+    /**
+     * Parses an ISO date (yyyy-MM-dd) string into a Java LocalDate.
+     */
     public static LocalDate date(Map<String, Object> body, String key) {
         try {
             return LocalDate.parse(text(body, key, 10));
@@ -126,7 +155,14 @@ public final class TripService {
         }
     }
 
-    // Checks that a trip exists and belongs to the given user
+    // =========================================================================
+    // 2. AUTHORIZATION & STATUS GUARDS
+    // =========================================================================
+
+    /**
+     * Verifies that a trip exists and belongs to the authenticated user.
+     * Uses 'FOR UPDATE' row locking to prevent race conditions during updates.
+     */
     public static Map<String, Object> owned(Connection connection, long userId, long tripId)
         throws SQLException {
         List<Map<String, Object>> rows = query(
@@ -141,21 +177,34 @@ public final class TripService {
         return rows.get(0);
     }
 
-    // Checks if a trip is still editable
+    /**
+     * Enforces that a trip is still in PLANNED status before allowing modifications.
+     */
     public static void editable(Map<String, Object> trip) {
         if (!"PLANNED".equals(trip.get("status"))) {
             throw new IllegalArgumentException("Only planned trips can be edited.");
         }
     }
 
-    // Checks if a trip has been completed
+    /**
+     * Verifies that a trip has been marked as COMPLETED before memories or feedback can be added.
+     */
     public static void completed(Map<String, Object> trip) {
         if (!"COMPLETED".equals(trip.get("status"))) {
             throw new IllegalArgumentException("Complete this trip before adding memories or feedback.");
         }
     }
 
-    // Creates or updates a trip
+    // =========================================================================
+    // 3. SMART TRIP CREATION & EDITING
+    // =========================================================================
+
+    /**
+     * Creates a new trip or updates an existing trip.
+     * When creating a new trip:
+     * - Auto-generates suggested daily itinerary items using the destination's top sights.
+     * - Auto-generates a smart packing list customized for the destination's season.
+     */
     public static long saveTrip(Connection connection, long userId, Map<String, Object> body)
         throws SQLException {
         long tripId = 0;
@@ -163,6 +212,7 @@ public final class TripService {
             tripId = number(body, "id", 1, Long.MAX_VALUE);
         }
 
+        // Calculate trip duration in days
         LocalDate startDate = date(body, "start_date");
         LocalDate endDate = date(body, "end_date");
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
@@ -178,6 +228,7 @@ public final class TripService {
             existingTrip = owned(connection, userId, tripId);
         }
 
+        // Verify destination exists and is active
         List<Map<String, Object>> destinationList = query(
             connection,
             "SELECT * FROM destinations WHERE id=?",
@@ -206,8 +257,13 @@ public final class TripService {
         String interests = optional(body, "interests", 500);
         BigDecimal budget = money(body, "budget");
 
+        // -----------------------------------------------------------------
+        // CASE A: Updating an existing trip
+        // -----------------------------------------------------------------
         if (tripId > 0) {
             editable(existingTrip);
+
+            // Prevent shortening trip duration if itinerary items exist on removed days
             List<Map<String, Object>> extraDays = query(
                 connection,
                 "SELECT id FROM itinerary WHERE trip_id=? AND day_number>?",
@@ -217,6 +273,7 @@ public final class TripService {
             if (!extraDays.isEmpty()) {
                 throw new IllegalArgumentException("Remove itinerary days outside the new duration first.");
             }
+
             execute(
                 connection,
                 "UPDATE trips SET destination_id=?,title=?,start_date=?,end_date=?,people=?,interests=?,budget=? WHERE id=?",
@@ -230,10 +287,14 @@ public final class TripService {
                 tripId
             );
         } else {
+            // -----------------------------------------------------------------
+            // CASE B: Creating a brand new trip
+            // -----------------------------------------------------------------
             if (startDate.isBefore(LocalDate.now())) {
                 throw new IllegalArgumentException("New trips must start today or later.");
             }
 
+            // Enforce account limit of 200 trips
             List<Map<String, Object>> countResult = query(
                 connection,
                 "SELECT COUNT(*) AS n FROM trips WHERE user_id=?",
@@ -244,6 +305,7 @@ public final class TripService {
                 throw new IllegalArgumentException("Your account has reached the 200-trip limit.");
             }
 
+            // Insert new trip row into database
             tripId = insert(
                 connection,
                 "INSERT INTO trips(user_id,destination_id,title,start_date,end_date,people,interests,budget) VALUES (?,?,?,?,?,?,?,?)",
@@ -257,6 +319,7 @@ public final class TripService {
                 budget
             );
 
+            // Auto-generate suggested daily itinerary items
             String itineraryMode = "suggested";
             if (body.containsKey("itinerary_mode")) {
                 itineraryMode = choice(body, "itinerary_mode", "suggested", "blank");
@@ -279,6 +342,7 @@ public final class TripService {
                     sights = attractionList.toArray(new String[0]);
                 }
 
+                // Distribute sights across trip days
                 for (int day = 1; day <= totalDays; day++) {
                     String place = sights[(day - 1) % sights.length].trim();
                     execute(
@@ -293,6 +357,7 @@ public final class TripService {
                 }
             }
 
+            // Auto-generate customized packing list based on destination's season
             String season = destinationList.get(0).get("season").toString();
             String seasonItem = "Sunscreen and reusable water bottle";
             if ("Winter".equals(season)) {
@@ -323,7 +388,16 @@ public final class TripService {
         return tripId;
     }
 
-    // Handles itinerary, packing or expenses items for a trip
+    // =========================================================================
+    // 4. CHILD ENTITY MANAGEMENT (Itinerary, Packing & Expenses)
+    // =========================================================================
+
+    /**
+     * Handles adding, updating, toggling, or deleting sub-items for a trip:
+     * - 'packing': Packing items with category, label, and packed checkbox.
+     * - 'expenses': Budget expenses with category, label, and cost.
+     * - 'itinerary': Schedule stops with day number, 24-hr time slot, title, and note.
+     */
     public static void child(
         Connection connection,
         long userId,
@@ -341,6 +415,7 @@ public final class TripService {
 
         String action = Objects.toString(body.get("action"), "save");
 
+        // Validate allowed entity types and actions
         if (!entity.equals("packing") && !entity.equals("itinerary") && !entity.equals("expenses")) {
             throw new IllegalArgumentException("Invalid item type.");
         }
@@ -351,6 +426,7 @@ public final class TripService {
             throw new IllegalArgumentException("Invalid item action.");
         }
 
+        // Verify existing item ownership
         if (itemId > 0) {
             List<Map<String, Object>> existingItem = query(
                 connection,
@@ -363,6 +439,7 @@ public final class TripService {
             }
         }
 
+        // Action: DELETE item
         if (action.equals("delete")) {
             if (itemId == 0) {
                 throw new Missing();
@@ -371,6 +448,7 @@ public final class TripService {
             return;
         }
 
+        // Enforce 500-item maximum per trip list
         if (itemId == 0) {
             List<Map<String, Object>> countResult = query(
                 connection,
@@ -383,6 +461,7 @@ public final class TripService {
             }
         }
 
+        // Sub-entity: PACKING CHECKLIST
         if (entity.equals("packing")) {
             if (action.equals("toggle")) {
                 if (itemId == 0) {
@@ -398,6 +477,7 @@ public final class TripService {
                 );
                 return;
             }
+
             String category = choice(
                 body,
                 "category",
@@ -427,7 +507,9 @@ public final class TripService {
                     label
                 );
             }
-        } else if (entity.equals("expenses")) {
+        }
+        // Sub-entity: EXPENSES & BUDGET ESTIMATES
+        else if (entity.equals("expenses")) {
             String category = choice(
                 body,
                 "category",
@@ -460,7 +542,9 @@ public final class TripService {
                     amount
                 );
             }
-        } else {
+        }
+        // Sub-entity: DAILY ITINERARY SLOTS
+        else {
             LocalDate tripStart = LocalDate.parse(trip.get("start_date").toString());
             LocalDate tripEnd = LocalDate.parse(trip.get("end_date").toString());
             long totalDays = ChronoUnit.DAYS.between(tripStart, tripEnd) + 1;
@@ -496,8 +580,13 @@ public final class TripService {
         }
     }
 
-    // Exception for when an item is not found
+    /**
+     * Custom exception thrown when a requested resource (trip, destination, item) is not found.
+     * Handled by ApiController to return HTTP 404.
+     */
     public static final class Missing extends RuntimeException {}
 
-    private TripService() {}
+    private TripService() {
+        // Utility service class - prevent direct instantiation
+    }
 }

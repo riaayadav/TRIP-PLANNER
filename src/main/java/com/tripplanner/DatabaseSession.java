@@ -14,11 +14,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-// DatabaseSession manages user sessions stored in the MySQL/H2 database
+/**
+ * DatabaseSession provides database-backed user session management.
+ * 
+ * Why Database-Backed Sessions?
+ * - Standard in-memory sessions are lost when a web server restarts.
+ * - Storing sessions in the database (the `web_sessions` table) allows session persistence
+ *   across restarts and enables multi-server horizontal scaling.
+ * 
+ * Security Features:
+ * 1. Token Hashing: The database stores only the SHA-256 digest of the cookie token.
+ *    Even if the database is leaked, an attacker cannot forge session cookies.
+ * 2. Session Rotation: On login, a new session key and new CSRF token are generated
+ *    to prevent Session Fixation attacks.
+ * 3. Cookie Flags: HttpOnly (blocks XSS access), SameSite=Lax (blocks CSRF), and Secure.
+ * 4. Automatic Expiry: Sessions automatically expire after 30 minutes of inactivity.
+ */
 final class DatabaseSession {
 
-    private static final long IDLE_MILLIS = 30 * 60 * 1000L; // 30 minutes
-    private static final String COOKIE = "ROAMSESSION";
+    // Session idle timeout: 30 minutes in milliseconds
+    private static final long IDLE_MILLIS = 30 * 60 * 1000L;
+    private static final String COOKIE_NAME = "ROAMSESSION";
+
     private final Connection connection;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
@@ -39,7 +56,9 @@ final class DatabaseSession {
         this.values = values;
     }
 
-    // Loads an existing session from cookie or creates a new one
+    /**
+     * Loads an existing active session from the HTTP cookie, or creates a new one.
+     */
     static DatabaseSession load(
         Connection connection,
         HttpServletRequest request,
@@ -48,18 +67,19 @@ final class DatabaseSession {
         long now = System.currentTimeMillis();
         String token = null;
 
+        // Step 1: Read the ROAMSESSION cookie from request headers
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
                 Cookie cookie = cookies[i];
-                if (COOKIE.equals(cookie.getName())) {
+                if (COOKIE_NAME.equals(cookie.getName())) {
                     token = cookie.getValue();
                     break;
                 }
             }
         }
 
-        // Random cleanup of expired sessions
+        // Step 2: Occasional lazy cleanup (1% of requests) of expired sessions
         if (ThreadLocalRandom.current().nextInt(100) == 0) {
             execute(
                 connection,
@@ -68,7 +88,7 @@ final class DatabaseSession {
             );
         }
 
-        // Validate token format and check if session exists in DB
+        // Step 3: If cookie exists and has valid format, look it up in the database
         if (token != null && token.matches("[A-Za-z0-9_-]{43}")) {
             String sessionKey = digest(token);
             List<Map<String, Object>> rows = query(
@@ -78,6 +98,7 @@ final class DatabaseSession {
                 now
             );
 
+            // If session found, extend its expiration time by another 30 minutes
             if (!rows.isEmpty()) {
                 int updated = execute(
                     connection,
@@ -92,7 +113,7 @@ final class DatabaseSession {
             }
         }
 
-        // Create a new session if not found or expired
+        // Step 4: No valid session found - create a brand new guest session
         String freshToken = Security.token();
         String sessionKey = digest(freshToken);
         String csrfToken = Security.token();
@@ -119,7 +140,9 @@ final class DatabaseSession {
         return session;
     }
 
-    // Retrieves a session attribute by name
+    /**
+     * Retrieves a stored session attribute (e.g., 'uid', 'csrf', 'auth_version').
+     */
     Object getAttribute(String name) {
         String lookupKey = name;
         if ("version".equals(name)) {
@@ -128,7 +151,10 @@ final class DatabaseSession {
         return values.get(lookupKey);
     }
 
-    // Authenticates user and rotates session token
+    /**
+     * Authenticates the user and rotates both the session token and CSRF token.
+     * Rotating session tokens prevents Session Fixation vulnerabilities.
+     */
     void authenticate(long userId, int version) throws SQLException {
         String freshToken = Security.token();
         String newKey = digest(freshToken);
@@ -151,26 +177,31 @@ final class DatabaseSession {
             throw new IllegalArgumentException("Your session changed. Refresh and sign in again.");
         }
 
-        key = newKey;
+        this.key = newKey;
         Map<String, Object> newValues = new HashMap<>();
         newValues.put("uid", userId);
         newValues.put("auth_version", version);
         newValues.put("csrf", csrfToken);
-        values = newValues;
+        this.values = newValues;
 
+        // Set the new rotated cookie on the response
         cookie(freshToken, false);
     }
 
-    // Invalidates and removes current session
+    /**
+     * Logs out the user by deleting the session row from the database and clearing the cookie.
+     */
     void invalidate() throws SQLException {
         execute(connection, "DELETE FROM web_sessions WHERE session_key=?", key);
-        values = new HashMap<>();
+        this.values = new HashMap<>();
         cookie("", true);
     }
 
-    // Sets session cookie on response
+    /**
+     * Attaches the session cookie to the HTTP response with secure attributes.
+     */
     private void cookie(String token, boolean expired) {
-        Cookie cookie = new Cookie(COOKIE, token);
+        Cookie cookie = new Cookie(COOKIE_NAME, token);
         String contextPath = request.getContextPath();
         if (contextPath == null || contextPath.isEmpty()) {
             cookie.setPath("/");
@@ -181,12 +212,14 @@ final class DatabaseSession {
         cookie.setSecure(request.isSecure() || Boolean.parseBoolean(env("APP_HTTPS", "false")));
         cookie.setAttribute("SameSite", "Lax");
         if (expired) {
-            cookie.setMaxAge(0);
+            cookie.setMaxAge(0); // Immediately expires cookie on client
         }
         response.addCookie(cookie);
     }
 
-    // Generates SHA-256 hex digest for token
+    /**
+     * Computes the SHA-256 hexadecimal digest of a token string.
+     */
     static String digest(String token) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -201,7 +234,7 @@ final class DatabaseSession {
             }
             return hexString.toString();
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("Failed to calculate SHA-256 digest", e);
         }
     }
 }

@@ -1,3 +1,10 @@
+-- =============================================================================
+-- ROAM TRIP PLANNER - CORE DATABASE SCHEMA (MySQL 8 / Relational Database)
+-- =============================================================================
+
+-- TABLE 1: USERS
+-- Stores traveler accounts and system administrators.
+-- Passwords are encrypted using PBKDF2-HMAC-SHA256 with 16-byte random salts.
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
@@ -9,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- TABLE 2: DESTINATIONS
+-- Master catalog of tourist destinations with seasonal advice, activities, and costs.
 CREATE TABLE IF NOT EXISTS destinations (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(120) NOT NULL,
@@ -24,6 +33,8 @@ CREATE TABLE IF NOT EXISTS destinations (
     active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- TABLE 3: TRIPS
+-- User-created personal trip itineraries linking a traveler to a destination.
 CREATE TABLE IF NOT EXISTS trips (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
@@ -40,8 +51,11 @@ CREATE TABLE IF NOT EXISTS trips (
     FOREIGN KEY (destination_id) REFERENCES destinations (id)
 );
 
+-- Index to optimize querying trips by user and start date
 CREATE INDEX idx_trips_user ON trips (user_id, start_date);
 
+-- TABLE 4: EXPENSES
+-- Itemized travel expenses for a trip (stay, meals, transport, sightseeing).
 CREATE TABLE IF NOT EXISTS expenses (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     trip_id BIGINT NOT NULL,
@@ -51,6 +65,8 @@ CREATE TABLE IF NOT EXISTS expenses (
     FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE
 );
 
+-- TABLE 5: ITINERARY
+-- Day-by-day and time-slot schedule for planned trip activities.
 CREATE TABLE IF NOT EXISTS itinerary (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     trip_id BIGINT NOT NULL,
@@ -61,6 +77,8 @@ CREATE TABLE IF NOT EXISTS itinerary (
     FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE
 );
 
+-- TABLE 6: PACKING
+-- Smart packing checklist categorized into clothing, documents, medical, and essentials.
 CREATE TABLE IF NOT EXISTS packing (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     trip_id BIGINT NOT NULL,
@@ -70,6 +88,8 @@ CREATE TABLE IF NOT EXISTS packing (
     FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE
 );
 
+-- TABLE 7: WISHLIST
+-- Many-to-many relationship table tracking destinations saved by users.
 CREATE TABLE IF NOT EXISTS wishlist (
     user_id BIGINT NOT NULL,
     destination_id BIGINT NOT NULL,
@@ -78,6 +98,8 @@ CREATE TABLE IF NOT EXISTS wishlist (
     FOREIGN KEY (destination_id) REFERENCES destinations (id)
 );
 
+-- TABLE 8: MEMORIES
+-- Travel journal entries with notes, dates, and optional photo attachments.
 CREATE TABLE IF NOT EXISTS memories (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
@@ -90,6 +112,8 @@ CREATE TABLE IF NOT EXISTS memories (
     FOREIGN KEY (trip_id) REFERENCES trips (id)
 );
 
+-- TABLE 9: FEEDBACK
+-- Trip ratings and reviews submitted by travelers with admin response tracking.
 CREATE TABLE IF NOT EXISTS feedback (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
@@ -102,11 +126,15 @@ CREATE TABLE IF NOT EXISTS feedback (
     FOREIGN KEY (trip_id) REFERENCES trips (id)
 );
 
+-- TABLE 10: SETTINGS
+-- System key-value configuration table (e.g., site name, currency).
 CREATE TABLE IF NOT EXISTS settings (
     setting_key VARCHAR(60) PRIMARY KEY,
     setting_value VARCHAR(2000) NOT NULL
 );
 
+-- TABLE 11: AUDIT LOG
+-- Compliance and security log tracking administrative actions and record changes.
 CREATE TABLE IF NOT EXISTS audit_log (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     actor_id BIGINT NOT NULL,
@@ -115,6 +143,8 @@ CREATE TABLE IF NOT EXISTS audit_log (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- TABLE 12: LOGIN ATTEMPTS
+-- Sliding-window tracking table to prevent brute-force login attempts.
 CREATE TABLE IF NOT EXISTS login_attempts (
     attempt_key VARCHAR(254) PRIMARY KEY,
     attempts INT NOT NULL,

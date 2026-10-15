@@ -1,19 +1,58 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="https://jakarta.ee/xml/ns/jakartaee" version="6.0">
-  <display-name>Trip Planner</display-name>
-  <filter><filter-name>guard</filter-name><filter-class
-    >com.tripplanner.RequestGuard</filter-class></filter>
-  <filter-mapping><filter-name>guard</filter-name><url-pattern>/api/*</url-pattern></filter-mapping>
-  <listener><listener-class>com.tripplanner.AppListener</listener-class></listener>
-  <servlet><servlet-name>page</servlet-name><servlet-class
-    >com.tripplanner.PageController</servlet-class></servlet>
-  <servlet-mapping><servlet-name>page</servlet-name><url-pattern /></servlet-mapping>
-  <servlet><servlet-name>api</servlet-name><servlet-class
-    >com.tripplanner.ApiController</servlet-class></servlet>
-  <servlet-mapping><servlet-name>api</servlet-name><url-pattern
-    >/api/*</url-pattern></servlet-mapping>
-  <session-config><session-timeout>30</session-timeout><cookie-config><http-only
-      >true</http-only></cookie-config><tracking-mode>COOKIE</tracking-mode></session-config>
-  <error-page><error-code>404</error-code><location>/WEB-INF/error.jsp</location></error-page>
-  <error-page><error-code>500</error-code><location>/WEB-INF/error.jsp</location></error-page>
+  <display-name>Roam - Trip Planner</display-name>
+
+  <!-- 1. Security & Rate-Limiting Filter: Limits excessive requests to protect against abuse -->
+  <filter>
+    <filter-name>guard</filter-name>
+    <filter-class>com.tripplanner.RequestGuard</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>guard</filter-name>
+    <url-pattern>/api/*</url-pattern>
+  </filter-mapping>
+
+  <!-- 2. Application Lifecycle Listener: Sets up and shuts down the database connection pool -->
+  <listener>
+    <listener-class>com.tripplanner.AppListener</listener-class>
+  </listener>
+
+  <!-- 3. Page Controller: Serves the main Single-Page Application (SPA) HTML/JSP view -->
+  <servlet>
+    <servlet-name>page</servlet-name>
+    <servlet-class>com.tripplanner.PageController</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>page</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+
+  <!-- 4. REST API Controller: Handles all backend API data, authentication and booking requests -->
+  <servlet>
+    <servlet-name>api</servlet-name>
+    <servlet-class>com.tripplanner.ApiController</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>api</servlet-name>
+    <url-pattern>/api/*</url-pattern>
+  </servlet-mapping>
+
+  <!-- 5. Session Configuration: 30 minutes timeout with secure HttpOnly cookie storage -->
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <http-only>true</http-only>
+    </cookie-config>
+    <tracking-mode>COOKIE</tracking-mode>
+  </session-config>
+
+  <!-- 6. Error Handling: Custom error page for 404 (Not Found) and 500 (Internal Server Error) -->
+  <error-page>
+    <error-code>404</error-code>
+    <location>/WEB-INF/error.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>500</error-code>
+    <location>/WEB-INF/error.jsp</location>
+  </error-page>
 </web-app>
