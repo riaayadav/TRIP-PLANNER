@@ -32,6 +32,66 @@ const state = {
 };
 
 // =============================================================================
+// 1.1 LOCAL STORAGE CACHE ENGINE (Stale-While-Revalidate & Instant Render)
+// =============================================================================
+
+const CACHE_TTL = {
+  SESSION: 15 * 60 * 1000,   // 15 minutes
+  DATA: 10 * 60 * 1000,      // 10 minutes
+  PACKAGES: 15 * 60 * 1000,  // 15 minutes
+  TRIP: 10 * 60 * 1000,      // 10 minutes
+  ADMIN: 5 * 60 * 1000,      // 5 minutes
+};
+
+const roamCache = {
+  get(key, maxAge = null) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const entry = JSON.parse(raw);
+      if (!entry || typeof entry !== 'object' || !('v' in entry)) return null;
+      const age = Date.now() - (entry.t || 0);
+      const isStale = maxAge !== null && age > maxAge;
+      return { data: entry.v, isStale, age };
+    } catch (e) {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ v: value, t: Date.now() }));
+    } catch (e) {
+      try {
+        // Safe eviction of old cached trips if localStorage quota is exceeded
+        const toRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('roam_trip_')) toRemove.push(k);
+        }
+        toRemove.forEach((k) => localStorage.removeItem(k));
+        localStorage.setItem(key, JSON.stringify({ v: value, t: Date.now() }));
+      } catch (err) {}
+    }
+  },
+  remove(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
+  },
+  clearUserData() {
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('roam_')) keysToRemove.push(k);
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    } catch (e) {}
+  },
+};
+window.roamCache = roamCache;
+
+// =============================================================================
 // 2. DATA FORMATTING & STRING UTILITIES
 // =============================================================================
 
@@ -133,6 +193,7 @@ async function api(path, body) {
       state.packages = null;
       state.compare.clear();
       state.csrf = '';
+      roamCache.clearUserData();
       try {
         const fresh = await fetch('api/session', { credentials: 'same-origin' });
         if (fresh.ok) state.csrf = (await fresh.json()).csrf;
@@ -145,10 +206,14 @@ async function api(path, body) {
 }
 
 /**
- * Refreshes main dashboard data from /api/data.
+ * Refreshes main dashboard data from /api/data and updates LocalStorage cache.
  */
-async function refresh() {
-  state.data = await api('data');
+async function refresh(isBackground = false) {
+  const fresh = await api('data');
+  const hasChanged = JSON.stringify(state.data) !== JSON.stringify(fresh);
+  state.data = fresh;
+  roamCache.set('roam_data_cache', fresh);
+  return hasChanged;
 }
 
 // =============================================================================
@@ -666,17 +731,95 @@ async function render() {
         'admin-bookings',
       ].includes(page)
     ) {
-      state.packages = await api('admin/packages');
-      content = operationPage(page);
+      const cachedAdminPkg = roamCache.get('roam_admin_packages_cache', CACHE_TTL.ADMIN);
+      if (cachedAdminPkg?.data) {
+        state.packages = cachedAdminPkg.data;
+        content = operationPage(page);
+        if (cachedAdminPkg.isStale) {
+          api('admin/packages').then((fresh) => {
+            if (JSON.stringify(fresh) !== JSON.stringify(state.packages)) {
+              state.packages = fresh;
+              roamCache.set('roam_admin_packages_cache', fresh);
+              const cur = currentRoute().split('?')[0];
+              if (['operations','admin-packages','admin-hotels','admin-transport','admin-bookings'].includes(cur)) {
+                shell(operationPage(cur));
+              }
+            }
+          }).catch(() => {});
+        }
+      } else {
+        state.packages = await api('admin/packages');
+        roamCache.set('roam_admin_packages_cache', state.packages);
+        content = operationPage(page);
+      }
     } else if (['packages', 'bookings'].includes(page)) {
-      state.packages = await api('packages');
-      content = page === 'packages' ? packageCards() : clientBookings();
+      const cachedPkg = roamCache.get('roam_packages_cache', CACHE_TTL.PACKAGES);
+      if (cachedPkg?.data) {
+        state.packages = cachedPkg.data;
+        content = page === 'packages' ? packageCards() : clientBookings();
+        if (cachedPkg.isStale) {
+          api('packages').then((fresh) => {
+            if (JSON.stringify(fresh) !== JSON.stringify(state.packages)) {
+              state.packages = fresh;
+              roamCache.set('roam_packages_cache', fresh);
+              const cur = currentRoute().split('?')[0];
+              if (['packages', 'bookings'].includes(cur)) {
+                shell(cur === 'packages' ? packageCards() : clientBookings());
+              }
+            }
+          }).catch(() => {});
+        }
+      } else {
+        state.packages = await api('packages');
+        roamCache.set('roam_packages_cache', state.packages);
+        content = page === 'packages' ? packageCards() : clientBookings();
+      }
     } else if (['itinerary', 'budget', 'packing'].includes(page) && id) {
-      state.trip = await api('trip?id=' + encodeURIComponent(id));
-      content = tripPage(state.trip, page);
+      const tripKey = 'roam_trip_' + id;
+      const cachedTrip = roamCache.get(tripKey, CACHE_TTL.TRIP);
+      if (cachedTrip?.data) {
+        state.trip = cachedTrip.data;
+        content = tripPage(state.trip, page);
+        if (cachedTrip.isStale) {
+          api('trip?id=' + encodeURIComponent(id)).then((fresh) => {
+            if (JSON.stringify(fresh) !== JSON.stringify(state.trip)) {
+              state.trip = fresh;
+              roamCache.set(tripKey, fresh);
+              const [curPage, curId] = currentRoute().split('?')[0].split('/');
+              if (['itinerary', 'budget', 'packing'].includes(curPage) && curId === String(id)) {
+                shell(tripPage(state.trip, curPage));
+              }
+            }
+          }).catch(() => {});
+        }
+      } else {
+        state.trip = await api('trip?id=' + encodeURIComponent(id));
+        roamCache.set(tripKey, state.trip);
+        content = tripPage(state.trip, page);
+      }
     } else if (page === 'admin') {
-      state.admin = await api('admin?' + query);
-      content = admin();
+      const adminKey = 'roam_admin_' + query;
+      const cachedAdmin = roamCache.get(adminKey, CACHE_TTL.ADMIN);
+      if (cachedAdmin?.data) {
+        state.admin = cachedAdmin.data;
+        content = admin();
+        if (cachedAdmin.isStale) {
+          api('admin?' + query).then((fresh) => {
+            if (JSON.stringify(fresh) !== JSON.stringify(state.admin)) {
+              state.admin = fresh;
+              roamCache.set(adminKey, fresh);
+              const [curPage, curQuery = ''] = currentRoute().split('?');
+              if (curPage === 'admin' && curQuery === query) {
+                shell(admin());
+              }
+            }
+          }).catch(() => {});
+        }
+      } else {
+        state.admin = await api('admin?' + query);
+        roamCache.set(adminKey, state.admin);
+        content = admin();
+      }
     } else {
       const pages = {
         home,
@@ -723,22 +866,65 @@ async function render() {
   }
 }
 /**
- * Bootstraps the application on initial page load:
- * 1. Calls GET /api/session to verify if user is signed in and fetch CSRF token
- * 2. If signed in, calls GET /api/data to load user's trips, wishlist, and destinations
- * 3. Calls render() to paint the active view based on location.hash
+ * Bootstraps the application on initial page load with LocalStorage Caching & Stale-While-Revalidate:
+ * 1. Instantly hydrates state from LocalStorage cache (0ms perceived load time).
+ * 2. Paints the cached view immediately without waiting for server response.
+ * 3. Quietly validates session and refreshes data in the background.
  */
 async function start() {
+  const cachedSession = roamCache.get('roam_session_cache', CACHE_TTL.SESSION);
+  const cachedData = roamCache.get('roam_data_cache', CACHE_TTL.DATA);
+  let renderedFromCache = false;
+
+  // Step 1: Instant LocalStorage hydration (0 ms render)
+  if (cachedSession?.data?.user) {
+    state.user = cachedSession.data.user;
+    state.csrf = cachedSession.data.csrf || '';
+    if (cachedData?.data) {
+      state.data = cachedData.data;
+      renderedFromCache = true;
+      try {
+        await render();
+      } catch (err) {}
+    }
+  } else {
+    // If not signed in and on public route, render landing immediately in 0ms
+    const route = currentRoute().split('?')[0];
+    if (['home', 'welcome', ''].includes(route)) {
+      landing();
+      renderedFromCache = true;
+    }
+  }
+
+  // Step 2: Background Revalidation (Non-blocking)
   try {
     const s = await api('session');
+    const userChanged = JSON.stringify(state.user) !== JSON.stringify(s.user);
     state.user = s.user;
     state.csrf = s.csrf;
-    if (state.user) await refresh();
-    await render();
+    roamCache.set('roam_session_cache', s);
+
+    if (state.user) {
+      const dataChanged = await refresh(true);
+      if (!renderedFromCache || userChanged || dataChanged) {
+        await render();
+      }
+    } else {
+      if (cachedSession?.data?.user) {
+        roamCache.clearUserData();
+        state.data = null;
+        state.trip = null;
+        await render();
+      } else if (!renderedFromCache) {
+        await render();
+      }
+    }
   } catch (e) {
-    if (['home', 'welcome'].includes(currentRoute().split('?')[0])) landing();
-    else app.innerHTML = empty('We couldn’t connect', escapeHtml(e.message));
-    toast(e.message, true);
+    if (!renderedFromCache) {
+      if (['home', 'welcome'].includes(currentRoute().split('?')[0])) landing();
+      else app.innerHTML = empty('We couldn’t connect', escapeHtml(e.message));
+      toast(e.message, true);
+    }
   }
 }
 
@@ -825,6 +1011,11 @@ function destinationForm(d = {}) {
 async function mutation(path, body, message = 'Saved.') {
   await api(path, body);
   if (modal.open) modal.close();
+  if (state.trip?.id) {
+    roamCache.remove('roam_trip_' + state.trip.id);
+  }
+  roamCache.remove('roam_packages_cache');
+  roamCache.remove('roam_admin_packages_cache');
   await refresh();
   await render();
   toast(message);
@@ -872,10 +1063,14 @@ document.addEventListener('click', async (event) => {
         state.user = null;
         state.data = null;
         state.packages = null;
+        state.trip = null;
+        state.admin = null;
         state.compare.clear();
         state.authMode = 'login';
-        location.hash = 'login';
-        await start();
+        roamCache.clearUserData();
+        location.hash = 'welcome';
+        landing();
+        toast('You have been signed out.');
         break;
       case 'detail': {
         const d = findDestination(id) || state.data.wishlist.find((d) => d.id === id);
@@ -1044,6 +1239,7 @@ document.addEventListener('submit', async (event) => {
   try {
     if (await packageSubmit(type, body, form)) return;
     if (type === 'login' || type === 'register') {
+      roamCache.clearUserData();
       await api(type, body);
       location.hash = 'home';
       await start();
@@ -1075,6 +1271,7 @@ document.addEventListener('submit', async (event) => {
     }
     if (type === 'trip') {
       const result = await api('trip', body);
+      roamCache.remove('roam_trip_' + result.id);
       await refresh();
       location.hash = 'itinerary/' + result.id;
       await render();
@@ -1085,12 +1282,14 @@ document.addEventListener('submit', async (event) => {
       await api('profile', body);
       const session = await api('session');
       state.user = session.user;
+      roamCache.set('roam_session_cache', session);
       await render();
       toast('Profile updated.');
       return;
     }
     if (type === 'password') {
       await api('password', body);
+      roamCache.clearUserData();
       await start();
       toast('Password changed. Sign in with your new password.');
       return;

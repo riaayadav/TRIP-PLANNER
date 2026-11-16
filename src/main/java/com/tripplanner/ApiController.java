@@ -253,6 +253,7 @@ public final class ApiController extends HttpServlet {
                     }
                     response.setCharacterEncoding(null);
                     response.setContentType("image/jpeg");
+                    response.setHeader("Cache-Control", "public, max-age=86400");
                     response.setContentLength(photoBytes.length);
                     response.getOutputStream().write(photoBytes);
                     return;
@@ -310,6 +311,7 @@ public final class ApiController extends HttpServlet {
                     }
                     response.setCharacterEncoding(null);
                     response.setContentType("image/jpeg");
+                    response.setHeader("Cache-Control", "public, max-age=86400");
                     response.setContentLength(photoBytes.length);
                     response.getOutputStream().write(photoBytes);
                     return;

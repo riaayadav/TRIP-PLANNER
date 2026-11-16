@@ -588,6 +588,10 @@ async function packageSubmit(type, body, form) {
   if (type === 'package-book') body.accepted_terms = body.accepted_terms === 'on';
   await api(paths[type], body);
   modal.close();
+  if (window.roamCache) {
+    window.roamCache.remove('roam_packages_cache');
+    window.roamCache.remove('roam_admin_packages_cache');
+  }
   if (type === 'package-book') location.hash = 'bookings';
   await render();
   toast(type === 'package-book' ? 'Demo booking requested.' : 'Saved.');

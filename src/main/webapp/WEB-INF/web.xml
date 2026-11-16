@@ -12,7 +12,17 @@
     <url-pattern>/api/*</url-pattern>
   </filter-mapping>
 
-  <!-- 2. Application Lifecycle Listener: Sets up and shuts down the database connection pool -->
+  <!-- 2. Static Asset Browser Caching Filter: Enables 7-day browser disk caching for CSS, JS, and images -->
+  <filter>
+    <filter-name>assetCache</filter-name>
+    <filter-class>com.tripplanner.AssetCacheFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>assetCache</filter-name>
+    <url-pattern>/assets/*</url-pattern>
+  </filter-mapping>
+
+  <!-- 3. Application Lifecycle Listener: Sets up and shuts down the database connection pool -->
   <listener>
     <listener-class>com.tripplanner.AppListener</listener-class>
   </listener>
