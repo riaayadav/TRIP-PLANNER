@@ -91,6 +91,21 @@ const roamCache = {
 };
 window.roamCache = roamCache;
 
+function saveCompareState() {
+  try {
+    roamCache.set('roam_compare_cache', [...state.compare]);
+  } catch (e) {}
+}
+
+function loadCompareState() {
+  try {
+    const cached = roamCache.get('roam_compare_cache');
+    if (cached && Array.isArray(cached.data)) {
+      state.compare = new Set(cached.data.map(Number));
+    }
+  } catch (e) {}
+}
+
 // =============================================================================
 // 2. DATA FORMATTING & STRING UTILITIES
 // =============================================================================
@@ -121,7 +136,7 @@ const localDate = () => {
 };
 const tripDurationDays = (t) =>
   Math.round((Date.parse(t.end_date) - Date.parse(t.start_date)) / 86400000) + 1;
-const findDestination = (id) => state.data.destinations.find((d) => Number(d.id) === Number(id));
+const findDestination = (id) => state.data?.destinations?.find((d) => Number(d.id) === Number(id));
 const currentRoute = () => location.hash.slice(1) || 'home';
 const icon = ['⌂', '☀', '◎', '✧', '＋', '₹', '▤', '✓', '⇄', '♡', '▧', '◷', '☆', '○', '↪'];
 const nav = [
@@ -344,7 +359,8 @@ function shell(content) {
 }
 function card(d) {
   const saved = state.data.wishlist.some((w) => w.id === d.id);
-  return `<article class="destination-card"><div class="card-image"><img loading="lazy" src="${escapeHtml(destinationImage(d.image))}" alt="${escapeHtml(d.category)} travel inspiration"><span class="season-pill">${escapeHtml(d.season)} escape</span></div><div class="card-body"><h3>${escapeHtml(d.name)}</h3><p>${escapeHtml(d.region)}</p><div class="card-bottom"><div><strong>${formatMoney(d.daily_cost)}</strong><small> / person / day</small></div><span class="pill">${d.duration} days</span></div><div class="card-actions">${button('Explore ↗', 'detail', d.id, 'btn-primary btn-sm')}${button(saved ? '♥ Saved' : '♡ Save', 'wish', d.id, 'btn-light btn-sm')}${button(state.compare.has(d.id) ? '✓ Compare' : '⇄ Compare', 'compare-add', d.id, 'btn-light btn-sm')}</div></div></article>`;
+  const isCompared = state.compare.has(Number(d.id));
+  return `<article class="destination-card"><div class="card-image"><img loading="lazy" src="${escapeHtml(destinationImage(d.image))}" alt="${escapeHtml(d.category)} travel inspiration"><span class="season-pill">${escapeHtml(d.season)} escape</span></div><div class="card-body"><h3>${escapeHtml(d.name)}</h3><p>${escapeHtml(d.region)}</p><div class="card-bottom"><div><strong>${formatMoney(d.daily_cost)}</strong><small> / person / day</small></div><span class="pill">${d.duration} days</span></div><div class="card-actions">${button('Explore ↗', 'detail', d.id, 'btn-primary btn-sm')}${button(saved ? '♥ Saved' : '♡ Save', 'wish', d.id, 'btn-light btn-sm')}${button(isCompared ? '✓ Compare' : '⇄ Compare', 'compare-add', d.id, isCompared ? 'btn-primary btn-sm' : 'btn-light btn-sm')}</div></div></article>`;
 }
 function nextTrip() {
   return state.data.trips
@@ -537,7 +553,7 @@ function tripList(tab) {
   );
 }
 function compare() {
-  const list = [...state.compare].map(dest).filter(Boolean);
+  const list = [...state.compare].map(findDestination).filter(Boolean);
   const fields = [
     ['region', 'Location'],
     ['daily_cost', 'Daily estimate / person'],
@@ -546,13 +562,54 @@ function compare() {
     ['activities', 'Activities'],
     ['attractions', 'Attractions'],
   ];
+  const availableDestinations = (state.data?.destinations || []).filter(
+    (d) => !state.compare.has(Number(d.id)),
+  );
+  const addForm =
+    state.compare.size < 3
+      ? availableDestinations.length
+        ? `<div class="panel"><form data-form="compare" class="form-grid">${select(
+            'destination_id',
+            'Add a destination to compare',
+            availableDestinations.map((d) => [d.id, d.name]),
+          )}${submit('Add to comparison')}</form></div>`
+        : `<div class="panel"><p class="note">All available destinations are in the comparison.</p></div>`
+      : `<div class="panel"><p class="note">Maximum of 3 destinations selected for comparison. Remove one to add another.</p></div>`;
+
   return (
     heading('A closer look, side by side.', 'Choose two or three destinations to compare.') +
-    `<div class="panel"><form data-form="compare" class="form-grid">${select(
-      'destination_id',
-      'Add a destination',
-      state.data.destinations.map((d) => [d.id, d.name]),
-    )}${submit('Add to comparison')}</form></div>${list.length >= 2 ? `<div class="panel table-responsive"><table class="table compare-table"><thead><tr><th>Destination</th>${list.map((d) => `<th>${escapeHtml(d.name)} ${button('×', 'compare-remove', d.id, 'btn-light btn-sm')}</th>`).join('')}</tr></thead><tbody>${fields.map(([k, l]) => `<tr><th>${l}</th>${list.map((d) => `<td>${k === 'daily_cost' ? formatMoney(d[k]) : escapeHtml(d[k])}</td>`).join('')}</tr>`).join('')}<tr><th>Your next step</th>${list.map((d) => `<td><a class="btn btn-primary" href="#plan/${d.id}">Plan ${escapeHtml(d.name)}</a></td>`).join('')}</tr></tbody></table></div>` : empty(`${list.length} of 2–3 places selected`, 'Add another destination to see the comparison.')}${list.length < 2 ? list.map((d) => `<div class="panel">${escapeHtml(d.name)} ${button('Remove', 'compare-remove', d.id)}</div>`).join('') : ''}`
+    addForm +
+    (list.length >= 2
+      ? `<div class="panel table-responsive"><table class="table compare-table"><thead><tr><th>Destination</th>${list
+          .map(
+            (d) =>
+              `<th>${escapeHtml(d.name)} ${button('×', 'compare-remove', d.id, 'btn-light btn-sm')}</th>`,
+          )
+          .join('')}</tr></thead><tbody>${fields
+          .map(
+            ([k, l]) =>
+              `<tr><th>${l}</th>${list
+                .map((d) => `<td>${k === 'daily_cost' ? formatMoney(d[k]) : escapeHtml(d[k])}</td>`)
+                .join('')}</tr>`,
+          )
+          .join('')}<tr><th>Your next step</th>${list
+          .map(
+            (d) =>
+              `<td><a class="btn btn-primary" href="#plan/${d.id}">Plan ${escapeHtml(d.name)}</a></td>`,
+          )
+          .join('')}</tr></tbody></table></div>`
+      : empty(
+          `${list.length} of 2–3 places selected`,
+          'Add another destination to see the comparison.',
+        )) +
+    (list.length < 2 && list.length > 0
+      ? list
+          .map(
+            (d) =>
+              `<div class="panel d-flex justify-content-between align-items-center"><span><strong>${escapeHtml(d.name)}</strong> (${escapeHtml(d.region)})</span>${button('Remove', 'compare-remove', d.id, 'btn-light btn-sm')}</div>`,
+          )
+          .join('')
+      : '')
   );
 }
 function syncMemoryDate(form) {
@@ -872,6 +929,7 @@ async function render() {
  * 3. Quietly validates session and refreshes data in the background.
  */
 async function start() {
+  loadCompareState();
   const cachedSession = roamCache.get('roam_session_cache', CACHE_TTL.SESSION);
   const cachedData = roamCache.get('roam_data_cache', CACHE_TTL.DATA);
   let renderedFromCache = false;
@@ -1089,11 +1147,13 @@ document.addEventListener('click', async (event) => {
         break;
       case 'compare-add':
       case 'compare-remove':
-        if (state.compare.has(id)) state.compare.delete(id);
-        else if (state.compare.size < 3) state.compare.add(id);
+        const targetId = Number(id);
+        if (state.compare.has(targetId)) state.compare.delete(targetId);
+        else if (state.compare.size < 3) state.compare.add(targetId);
         else throw Error('Compare up to three destinations at a time.');
+        saveCompareState();
         await render();
-        toast(`${state.compare.size} destinations selected for comparison.`);
+        toast(`${state.compare.size} destination${state.compare.size === 1 ? '' : 's'} selected for comparison.`);
         break;
       case 'trip-edit':
         shell(plan(state.trip));
@@ -1263,10 +1323,13 @@ document.addEventListener('submit', async (event) => {
     if (type === 'compare') {
       const id = Number(body.destination_id);
       if (!findDestination(id)) throw Error('Select a destination.');
-      if (state.compare.size >= 3 && !state.compare.has(id))
-        throw Error('Remove a destination before adding another.');
+      if (state.compare.has(id)) throw Error('This destination is already in the comparison list.');
+      if (state.compare.size >= 3)
+        throw Error('Compare up to three destinations at a time. Remove one first.');
       state.compare.add(id);
+      saveCompareState();
       await render();
+      toast('Destination added to comparison.');
       return;
     }
     if (type === 'trip') {
