@@ -5,6 +5,27 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
+
+# Ensure JAVA_HOME is set to a valid JDK
+if (-not $env:JAVA_HOME -or -not (Test-Path -LiteralPath "$env:JAVA_HOME\bin\java.exe")) {
+    $candidateJavaHomes = @(
+        'C:\Program Files\Java 11\jdk-11',
+        'C:\Program Files\Java\jdk-17',
+        'C:\Program Files\Java\jdk-21',
+        'C:\Program Files\Eclipse Adoptium\jdk-17*',
+        'C:\Program Files\Eclipse Adoptium\jdk-21*',
+        'C:\Program Files\Microsoft\jdk-17*',
+        'C:\Program Files\Microsoft\jdk-21*'
+    )
+    foreach ($cand in $candidateJavaHomes) {
+        $resolved = Resolve-Path $cand -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($resolved -and (Test-Path -LiteralPath (Join-Path $resolved.Path 'bin\java.exe'))) {
+            $env:JAVA_HOME = $resolved.Path
+            $env:PATH = "$(Join-Path $resolved.Path 'bin');$env:PATH"
+            break
+        }
+    }
+}
 $mavenCommand = Get-Command mvn.cmd -ErrorAction SilentlyContinue
 $bundledMaven = Join-Path $PSScriptRoot 'tools/apache-maven-3.9.11/bin/mvn.cmd'
 if ($mavenCommand) {
