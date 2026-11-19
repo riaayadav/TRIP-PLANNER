@@ -6,3 +6,7 @@ target/
 *.iml
 .local-data/
 tools/
+release/
+.chart-data*
+.presentation-build/
+*.tmp

@@ -35,32 +35,24 @@ Alternatively, copy `.env.example` to `.env`, replace all secrets, and run `dock
 - Admin: a separate operations dashboard; package creation, editing, publication and removal; hotel and transport management; booking statuses and a simulated receipt/refund ledger; destination catalog creation/editing/publication, season/category/cost/activity curation, registration switch, dashboard message, support contact, user enable/disable, feedback responses, aggregate metrics and audit trail.
 - Improvements: responsive layout, keyboard labels, reduced-motion support, empty/error/success states, duplicate-submit protection, printable itineraries, transactional trip generation, private photo normalization, and explicit planning estimates.
 
-See `docs/FEATURES.md` for the PDF coverage matrix, `docs/ARCHITECTURE.md` for the design, `docs/OPERATIONS.md` for deployment and backup instructions, and `docs/VALIDATION.md` for verification results and limits.
+See `docs/FEATURES.md` for the feature coverage matrix, `docs/ARCHITECTURE.md` for architectural design, and `PROJECT_CODE_WALKTHROUGH.md` for code walkthrough.
 
-## Important scope
+## Scope & Project Notes
 
-The application supports personal trip planning and package booking requests. Payment entries are simulated: no money moves and no hotel, flight or transport supplier receives a reservation. The package catalog includes hotel and transportation records, inclusions, exclusions, itineraries and terms. Live prices, maps, email delivery, weather and password-reset email are not connected. Seeded destination rates and package fixtures are demonstration content.
-
-Production use requires your hosting environment, domain/TLS, secret management, backup/restore validation, destination content review, and capacity testing for your expected traffic. No software can be honestly certified to have zero bugs or unlimited performance.
+The application supports personal trip planning, destination discovery, budget tracking, and package booking requests. Payment entries are simulated for demonstration purposes. The package catalog includes hotel and transportation options, inclusions, exclusions, and itineraries.
 
 ## Tests
 
-`mvn verify` runs HTTP integration tests on embedded Tomcat and H2. To repeat the same suite on an **empty disposable MySQL database**, set these Maven properties:
-
+Run backend integration tests:
 ```sh
-mvn test -DTEST_DB_URL=jdbc:mysql://127.0.0.1:3308/trip_planner_test -DTEST_DB_USER=test_user -DTEST_DB_PASSWORD=your_test_password
+mvn test
 ```
 
-The suite creates test accounts and records. Never point it at production. Use a fresh database for each run. See `docs/VALIDATION.md` for what was actually executed.
+Run frontend UI regression tests:
+```sh
+node --test src/test/js/ui.test.cjs
+```
 
-## Free hosted MySQL and Vercel
+## Package Management & Demo Payments
 
-See [the setup guide](docs/FREE-MYSQL-VERCEL.md) for Aiven Free, database initialization, Vercel container deployment and the 12-user capacity checks. A purchased domain is not required.
-
-Latest local audit: [Local verification](docs/LOCAL-VERIFICATION.md), including the 16-scenario suites, UI regressions and launcher instructions.
-
-## Package management and demo payments
-
-Administrators now use a separate operations dashboard. Manage packages, hotels, transportation, booking requests and simulated payment histories. Clients can browse published packages and review their own bookings. See [Packages guide](docs/PACKAGES.md). Existing databases migrate to schema version 4 with initialization enabled.
-
-Destination categories are entered as text (up to 40 characters). Administrators can upload JPEG or PNG covers up to 3 MB; existing covers remain unchanged when no replacement is chosen. Schema version 4 adds destination photo storage.
+Administrators have access to a dedicated operations dashboard to manage packages, hotels, transportation, booking requests, and simulated payment ledgers. Clients can browse published packages, submit booking requests, and review their bookings and receipts. See [Packages Guide](docs/PACKAGES.md).
