@@ -35,7 +35,7 @@ You have two very easy ways to run the project in Eclipse:
 
 ### Method B (Right-click in Package Explorer):
 1. In the left **Package Explorer** / **Project Explorer** pane:
-2. Expand `trip-planner` $\rightarrow$ expand `src/test/java` $\rightarrow$ expand `com.tripplanner`.
+2. Expand `trip-planner` $\rightarrow$ expand `tests/java` $\rightarrow$ expand `com.tripplanner`.
 3. Right-click on **`DevServer.java`**.
 4. Select **Run As** $\rightarrow$ **Java Application**.
 
@@ -73,10 +73,10 @@ When the presentation or demo is finished:
 ## Quick Viva / Teacher Q&A Cheat Sheet:
 
 - **Q: Where is your REST API controller?**
-  - **A:** `src/main/java/com/tripplanner/ApiController.java` — it handles all JSON endpoints (`/api/session`, `/api/data`, `/api/trip`, `/api/packages`).
+  - **A:** `backend/src/main/java/com/tripplanner/ApiController.java` — it handles all JSON endpoints (`/api/session`, `/api/data`, `/api/trip`, `/api/packages`).
 - **Q: Where is your Database connection pool?**
-  - **A:** `src/main/java/com/tripplanner/Database.java` — uses HikariCP connection pool with prepared statements to prevent SQL injection.
+  - **A:** `backend/src/main/java/com/tripplanner/Database.java` — uses HikariCP connection pool with prepared statements to prevent SQL injection.
 - **Q: Where is the Deployment Descriptor?**
-  - **A:** `src/main/webapp/WEB-INF/web.xml` — configures `RequestGuard` filter, `AssetCacheFilter`, `AppListener`, and servlet mappings.
+  - **A:** `frontend/WEB-INF/web.xml` — configures `RequestGuard` filter, `AssetCacheFilter`, `AppListener`, and servlet mappings.
 - **Q: Why do we run `DevServer.java` instead of Eclipse's external Tomcat server?**
   - **A:** Because this project uses **Jakarta EE 10 / Servlet 6.0**, which requires **Tomcat 10.1**. `DevServer.java` bundles embedded Tomcat 10.1.59 via Maven, ensuring zero server configuration and 100% reliable startup on localhost.

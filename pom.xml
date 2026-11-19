@@ -31,14 +31,43 @@
       >tomcat-embed-jasper</artifactId><version>${tomcat.version}</version><scope
       >test</scope></dependency>
   </dependencies>
-  <build><finalName>trip-planner</finalName><plugins>
-    <plugin><groupId>org.apache.maven.plugins</groupId><artifactId
-        >maven-compiler-plugin</artifactId><version>3.14.0</version></plugin>
-    <plugin><groupId>org.apache.maven.plugins</groupId><artifactId
-        >maven-war-plugin</artifactId><version>3.4.0</version></plugin>
-    <plugin><groupId>org.apache.maven.plugins</groupId><artifactId
-        >maven-surefire-plugin</artifactId><version>3.5.3</version></plugin>
-    <plugin><groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version
-        >3.5.0</version></plugin>
-  </plugins></build>
+  <build>
+    <finalName>trip-planner</finalName>
+    <sourceDirectory>backend/src/main/java</sourceDirectory>
+    <testSourceDirectory>tests/java</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>database</directory>
+        <includes>
+          <include>schema.sql</include>
+          <include>packages.sql</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.14.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.4.0</version>
+        <configuration>
+          <warSourceDirectory>frontend</warSourceDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.3</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.0</version>
+      </plugin>
+    </plugins>
+  </build>
 </project>

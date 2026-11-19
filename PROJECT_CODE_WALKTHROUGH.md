@@ -50,24 +50,24 @@ This guide explains the entire **Roam Trip Planner** codebase in plain, simple E
 ```
 
 1. **View (Presentation Layer)**:
-   - [`src/main/webapp/WEB-INF/app.jsp`](src/main/webapp/WEB-INF/app.jsp): The single HTML page shell.
-   - [`src/main/webapp/assets/app.js`](src/main/webapp/assets/app.js): Single Page Application (SPA) client router, interactive UI views, and form handlers.
-   - [`src/main/webapp/assets/packages.js`](src/main/webapp/assets/packages.js): Travel package cards, hotel/transport management, and booking workflow.
-   - [`src/main/webapp/assets/app.css`](src/main/webapp/assets/app.css): Clean typography, responsive card layouts, dark banners, and print styles.
+   - [`frontend/WEB-INF/app.jsp`](frontend/WEB-INF/app.jsp): The single HTML page shell.
+   - [`frontend/assets/app.js`](frontend/assets/app.js): Single Page Application (SPA) client router, interactive UI views, and form handlers.
+   - [`frontend/assets/packages.js`](frontend/assets/packages.js): Travel package cards, hotel/transport management, and booking workflow.
+   - [`frontend/assets/app.css`](frontend/assets/app.css): Clean typography, responsive card layouts, dark banners, and print styles.
 
 2. **Controller (Traffic Control Layer)**:
-   - [`PageController.java`](src/main/java/com/tripplanner/PageController.java): Serves the JSP view and sets security headers (Content Security Policy, Cache-Control).
-   - [`ApiController.java`](src/main/java/com/tripplanner/ApiController.java): Central REST API servlet. Receives JSON from JavaScript, checks session and CSRF tokens, calls business services, and returns JSON.
-   - [`RequestGuard.java`](src/main/java/com/tripplanner/RequestGuard.java): A Servlet Filter that limits requests per IP (sliding window token bucket) to protect against DoS and brute-force attacks.
+   - [`PageController.java`](backend/src/main/java/com/tripplanner/PageController.java): Serves the JSP view and sets security headers (Content Security Policy, Cache-Control).
+   - [`ApiController.java`](backend/src/main/java/com/tripplanner/ApiController.java): Central REST API servlet. Receives JSON from JavaScript, checks session and CSRF tokens, calls business services, and returns JSON.
+   - [`RequestGuard.java`](backend/src/main/java/com/tripplanner/RequestGuard.java): A Servlet Filter that limits requests per IP (sliding window token bucket) to protect against DoS and brute-force attacks.
 
 3. **Model & Business Logic Layer**:
-   - [`TripService.java`](src/main/java/com/tripplanner/TripService.java): Trip creation, smart day-by-day itinerary suggestions, season-tailored packing lists, and budget calculation.
-   - [`PackageService.java`](src/main/java/com/tripplanner/PackageService.java): Travel package publication, hotel & transport options, booking requests, and simulated double-entry payment ledger.
-   - [`Security.java`](src/main/java/com/tripplanner/Security.java): Cryptographic password hashing (PBKDF2 with salt) and constant-time equality checks.
-   - [`DatabaseSession.java`](src/main/java/com/tripplanner/DatabaseSession.java): Manages user login sessions stored directly in the database (`web_sessions`), automatically rotating tokens on login.
+   - [`TripService.java`](backend/src/main/java/com/tripplanner/TripService.java): Trip creation, smart day-by-day itinerary suggestions, season-tailored packing lists, and budget calculation.
+   - [`PackageService.java`](backend/src/main/java/com/tripplanner/PackageService.java): Travel package publication, hotel & transport options, booking requests, and simulated double-entry payment ledger.
+   - [`Security.java`](backend/src/main/java/com/tripplanner/Security.java): Cryptographic password hashing (PBKDF2 with salt) and constant-time equality checks.
+   - [`DatabaseSession.java`](backend/src/main/java/com/tripplanner/DatabaseSession.java): Manages user login sessions stored directly in the database (`web_sessions`), automatically rotating tokens on login.
 
 4. **Data Access Layer (DAO)**:
-   - [`Database.java`](src/main/java/com/tripplanner/Database.java): Manages HikariCP connection pooling, runs safe parameter-bound queries via JDBC `PreparedStatement`, and executes automated schema migrations from v1 to v4.
+   - [`Database.java`](backend/src/main/java/com/tripplanner/Database.java): Manages HikariCP connection pooling, runs safe parameter-bound queries via JDBC `PreparedStatement`, and executes automated schema migrations from v1 to v4.
 
 ---
 
@@ -75,20 +75,20 @@ This guide explains the entire **Roam Trip Planner** codebase in plain, simple E
 
 | File Path | What It Does (In 1 Simple Sentence) |
 | :--- | :--- |
-| [`SchemaInitializer.java`](src/main/java/com/tripplanner/SchemaInitializer.java) | Command-line tool to run database schema migrations before starting the web server. |
-| [`AppListener.java`](src/main/java/com/tripplanner/AppListener.java) | Starts the database pool when Tomcat boots up and shuts it down when Tomcat stops. |
-| [`PageController.java`](src/main/java/com/tripplanner/PageController.java) | Serves the private `WEB-INF/app.jsp` template with HTTP security headers. |
-| [`ApiController.java`](src/main/java/com/tripplanner/ApiController.java) | Handles all JSON REST API requests, authentication, and admin actions. |
-| [`Database.java`](src/main/java/com/tripplanner/Database.java) | Connects to MySQL/H2 using HikariCP and executes parameterized SQL statements safely. |
-| [`DatabaseSession.java`](src/main/java/com/tripplanner/DatabaseSession.java) | Stores user sessions in the `web_sessions` table with 30-minute expiration. |
-| [`TripService.java`](src/main/java/com/tripplanner/TripService.java) | Validates user input, calculates trip duration, and generates suggested itineraries. |
-| [`PackageService.java`](src/main/java/com/tripplanner/PackageService.java) | Manages package listings, hotels, transportation, bookings, and demo payments. |
-| [`Security.java`](src/main/java/com/tripplanner/Security.java) | Hashes passwords with PBKDF2-HMAC-SHA256 (600,000 iterations) and 16-byte random salt. |
-| [`RequestGuard.java`](src/main/java/com/tripplanner/RequestGuard.java) | Rate-limiting filter that prevents bots from spamming login or API endpoints. |
-| [`app.jsp`](src/main/webapp/WEB-INF/app.jsp) | Base HTML layout with viewport tags, stylesheets, and modal dialog containers. |
-| [`web.xml`](src/main/webapp/WEB-INF/web.xml) | Deployment descriptor declaring servlets, URL mappings, and security filter chains. |
-| [`app.js`](src/main/webapp/assets/app.js) | Frontend client routing, dashboard rendering, itinerary builder, and budget tracking. |
-| [`packages.js`](src/main/webapp/assets/packages.js) | Frontend package booking modal, supplier forms, and simulated payment ledger UI. |
+| [`SchemaInitializer.java`](backend/src/main/java/com/tripplanner/SchemaInitializer.java) | Command-line tool to run database schema migrations before starting the web server. |
+| [`AppListener.java`](backend/src/main/java/com/tripplanner/AppListener.java) | Starts the database pool when Tomcat boots up and shuts it down when Tomcat stops. |
+| [`PageController.java`](backend/src/main/java/com/tripplanner/PageController.java) | Serves the private `WEB-INF/app.jsp` template with HTTP security headers. |
+| [`ApiController.java`](backend/src/main/java/com/tripplanner/ApiController.java) | Handles all JSON REST API requests, authentication, and admin actions. |
+| [`Database.java`](backend/src/main/java/com/tripplanner/Database.java) | Connects to MySQL/H2 using HikariCP and executes parameterized SQL statements safely. |
+| [`DatabaseSession.java`](backend/src/main/java/com/tripplanner/DatabaseSession.java) | Stores user sessions in the `web_sessions` table with 30-minute expiration. |
+| [`TripService.java`](backend/src/main/java/com/tripplanner/TripService.java) | Validates user input, calculates trip duration, and generates suggested itineraries. |
+| [`PackageService.java`](backend/src/main/java/com/tripplanner/PackageService.java) | Manages package listings, hotels, transportation, bookings, and demo payments. |
+| [`Security.java`](backend/src/main/java/com/tripplanner/Security.java) | Hashes passwords with PBKDF2-HMAC-SHA256 (600,000 iterations) and 16-byte random salt. |
+| [`RequestGuard.java`](backend/src/main/java/com/tripplanner/RequestGuard.java) | Rate-limiting filter that prevents bots from spamming login or API endpoints. |
+| [`app.jsp`](frontend/WEB-INF/app.jsp) | Base HTML layout with viewport tags, stylesheets, and modal dialog containers. |
+| [`web.xml`](frontend/WEB-INF/web.xml) | Deployment descriptor declaring servlets, URL mappings, and security filter chains. |
+| [`app.js`](frontend/assets/app.js) | Frontend client routing, dashboard rendering, itinerary builder, and budget tracking. |
+| [`packages.js`](frontend/assets/packages.js) | Frontend package booking modal, supplier forms, and simulated payment ledger UI. |
 
 ---
 
@@ -97,14 +97,14 @@ This guide explains the entire **Roam Trip Planner** codebase in plain, simple E
 ### A. How User Authentication Works
 1. **User enters email & password** on the login form.
 2. The browser sends a `POST` request to `/api/login` with JSON payload and CSRF header.
-3. [`RequestGuard.java`](src/main/java/com/tripplanner/RequestGuard.java) checks if the IP has exceeded 50 attempts in 15 minutes.
-4. [`ApiController.java`](src/main/java/com/tripplanner/ApiController.java) fetches the user row by email from MySQL.
-5. [`Security.java`](src/main/java/com/tripplanner/Security.java) derives the PBKDF2 hash of the entered password using the stored salt and compares it using `MessageDigest.isEqual`.
-6. [`DatabaseSession.java`](src/main/java/com/tripplanner/DatabaseSession.java) creates a session row in `web_sessions`, rotates the cookie token, sets `HttpOnly` and `SameSite=Lax`, and sends an updated CSRF token back to the browser.
+3. [`RequestGuard.java`](backend/src/main/java/com/tripplanner/RequestGuard.java) checks if the IP has exceeded 50 attempts in 15 minutes.
+4. [`ApiController.java`](backend/src/main/java/com/tripplanner/ApiController.java) fetches the user row by email from MySQL.
+5. [`Security.java`](backend/src/main/java/com/tripplanner/Security.java) derives the PBKDF2 hash of the entered password using the stored salt and compares it using `MessageDigest.isEqual`.
+6. [`DatabaseSession.java`](backend/src/main/java/com/tripplanner/DatabaseSession.java) creates a session row in `web_sessions`, rotates the cookie token, sets `HttpOnly` and `SameSite=Lax`, and sends an updated CSRF token back to the browser.
 
 ### B. How Smart Trip Planning Works
 1. The traveler selects a destination, start date, end date, travelers, and budget.
-2. [`TripService.saveTrip()`](src/main/java/com/tripplanner/TripService.java#L158) calculates the exact days: `ChronoUnit.DAYS.between(startDate, endDate) + 1`.
+2. [`TripService.saveTrip()`](backend/src/main/java/com/tripplanner/TripService.java#L158) calculates the exact days: `ChronoUnit.DAYS.between(startDate, endDate) + 1`.
 3. **Smart Itinerary**: It reads the destination's top attractions (e.g. Solang Valley, Jogini Falls for Manali) and distributes them across each day at 09:00 AM as starting itinerary suggestions!
 4. **Smart Packing Checklist**: It checks the destination season:
    - If **Winter**: auto-adds *"Warm layers"*.

@@ -74,6 +74,6 @@ For a Java error, run `java -version` and check `JAVA_HOME`. For a database lock
 
 ## Verify changes
 
-Run `mvn verify` and `node --test src/test/js/ui.test.cjs`. The integration tests create accounts and records; use only an empty disposable database when supplying `TEST_DB_URL`. See the [README](README.md) for the MySQL test command.
+Run `mvn verify` and `node --test tests/js/ui.test.cjs`. The integration tests create accounts and records; use only an empty disposable database when supplying `TEST_DB_URL`. See the [README](README.md) for the MySQL test command.
 
 To build an itinerary yourself, choose **Plan my trip → Build your itinerary → Start with a blank itinerary**. After creating the trip, use **Add activity** in its itinerary. Each activity can be edited or removed while the trip is planned. Suggested activities remain available as the default starting option.

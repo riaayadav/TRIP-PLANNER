@@ -69,11 +69,18 @@ function view(fetch) {
     window: { addEventListener() {} },
     document: { querySelector: node, addEventListener() {} },
   });
+  const resolveAsset = (file) => {
+    const p1 = path.join(__dirname, '../../frontend/assets', file);
+    if (fs.existsSync(p1)) return p1;
+    const p2 = path.join(__dirname, '../../src/main/webapp/assets', file);
+    if (fs.existsSync(p2)) return p2;
+    return path.join(__dirname, '../frontend/assets', file);
+  };
   const source = fs
-    .readFileSync(path.join(__dirname, '../../main/webapp/assets/app.js'), 'utf8')
+    .readFileSync(resolveAsset('app.js'), 'utf8')
     .replace(/start\(\);\s*$/, '');
   vm.runInContext(
-    fs.readFileSync(path.join(__dirname, '../../main/webapp/assets/packages.js'), 'utf8'),
+    fs.readFileSync(resolveAsset('packages.js'), 'utf8'),
     context,
   );
   vm.runInContext(source, context);

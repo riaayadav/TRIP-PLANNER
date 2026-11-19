@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '22'
       - name: Verify UI regression behavior
-        run: node --test src/test/js/ui.test.cjs
+        run: node --test tests/js/ui.test.cjs
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

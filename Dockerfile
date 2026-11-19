@@ -2,7 +2,10 @@ FROM maven:3.9.11-eclipse-temurin-17 AS build
 WORKDIR /build
 COPY pom.xml .
 RUN mvn -B dependency:go-offline
-COPY src ./src
+COPY backend ./backend
+COPY frontend ./frontend
+COPY database ./database
+COPY tests ./tests
 RUN mvn -B verify
 
 FROM tomcat:10.1.59-jre17-temurin

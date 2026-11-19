@@ -50,7 +50,7 @@ mvn test
 
 Run frontend UI regression tests:
 ```sh
-node --test src/test/js/ui.test.cjs
+node --test tests/js/ui.test.cjs
 ```
 
 ## Package Management & Demo Payments

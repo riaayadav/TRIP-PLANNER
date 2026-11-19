@@ -26,7 +26,10 @@ public final class DevServer {
         server.setPort(port);
         server.getConnector().setProperty("address", "127.0.0.1");
 
-        File webappDir = new File("src/main/webapp");
+        File webappDir = new File("frontend");
+        if (!webappDir.exists()) {
+            webappDir = new File("src/main/webapp");
+        }
         Context context = server.addWebapp("", webappDir.getAbsolutePath());
         context.setParentClassLoader(DevServer.class.getClassLoader());
 
